@@ -210,7 +210,7 @@ async def get_personal_ai_coach(user_id: int, message: str):
 ### **1. AI Workout Recommendations (Premium)**
 ```python
 # ai_premium_features.py
-import openai
+import anthropic
 from datetime import datetime, timedelta
 
 class PremiumAIFeatures:
@@ -243,14 +243,17 @@ class PremiumAIFeatures:
         5. Progress tracking metrics
         """
         
-        response = await openai.ChatCompletion.acreate(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}],
+        claude_client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+        
+        response = await claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=1000,
             temperature=0.7,
-            max_tokens=1000
+            system="You are an expert personal trainer creating personalized workout plans.",
+            messages=[{"role": "user", "content": prompt}]
         )
         
-        workout_plan = response.choices[0].message.content
+        workout_plan = response.content[0].text
         
         # Save generated workout
         await save_workout_plan(user_id, workout_plan, 'ai_generated')
@@ -316,14 +319,15 @@ class PremiumAIFeatures:
         messages.extend(conversation_history[-10:])  # Last 10 messages for context
         messages.append({"role": "user", "content": message})
         
-        response = await openai.ChatCompletion.acreate(
-            model="gpt-4",
-            messages=messages,
+        response = await claude_client.messages.create(
+            model="claude-3-5-sonnet-20241022",
+            max_tokens=500,
             temperature=0.8,
-            max_tokens=500
+            system=system_prompt,
+            messages=messages[-10:] + [{"role": "user", "content": message}]
         )
         
-        ai_response = response.choices[0].message.content
+        ai_response = response.content[0].text
         
         # Save conversation
         await save_coach_conversation(user_id, message, ai_response)
