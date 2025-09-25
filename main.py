@@ -122,6 +122,26 @@ async def service_worker():
         }
     )
 
+@app.get("/ai_dashboard.html")
+async def ai_dashboard():
+    """Serve AI Dashboard with PWA support."""
+    return FileResponse("ai_dashboard.html", media_type="text/html")
+
+@app.get("/test_frontend.html")
+async def test_frontend():
+    """Serve test frontend with PWA support."""
+    return FileResponse("test_frontend.html", media_type="text/html")
+
+@app.get("/dashboard")
+async def dashboard_shortcut():
+    """Shortcut to AI Dashboard."""
+    return FileResponse("ai_dashboard.html", media_type="text/html")
+
+@app.get("/test")
+async def test_shortcut():
+    """Shortcut to test frontend."""
+    return FileResponse("test_frontend.html", media_type="text/html")
+
 # Exercise & Workout Routes
 @app.get("/api/exercises")
 async def get_exercises(category: str = None, muscle_group: str = None):

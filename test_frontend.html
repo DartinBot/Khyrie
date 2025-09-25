@@ -2,8 +2,22 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Family & Friends Fitness - Test Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Khyrie Fitness - Full Platform Test</title>
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Khyrie Fitness">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png">
+    
+    <!-- Stylesheets -->
     <link rel="stylesheet" href="FamilyFriends.css">
     <link rel="stylesheet" href="SharedWorkout.css">
     <link rel="stylesheet" href="WeightTracker.css">
@@ -484,6 +498,49 @@
                 resultDiv.textContent = `Error: ${error.message}`;
             }
         }
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('PWA ServiceWorker registered for test page:', registration);
+                })
+                .catch((error) => {
+                    console.log('PWA ServiceWorker registration failed:', error);
+                });
+        }
+
+        // PWA Install Prompt for Test Page
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Add install prompt to the test page
+            const testControls = document.querySelector('.test-section');
+            if (testControls) {
+                const installDiv = document.createElement('div');
+                installDiv.innerHTML = `
+                    <div style="background: linear-gradient(45deg, #1e40af, #10b981); color: white; padding: 15px; border-radius: 8px; margin: 15px 0; text-align: center;">
+                        <h4 style="margin: 0 0 10px 0;">📱 Install Khyrie Fitness App</h4>
+                        <p style="margin: 0 0 10px 0; font-size: 14px;">Get the full native app experience with offline support!</p>
+                        <button onclick="installTestPWA()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-right: 10px;">Install App</button>
+                        <button onclick="this.parentElement.parentElement.remove()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 10px 20px; border-radius: 6px; cursor: pointer;">Not Now</button>
+                    </div>
+                `;
+                testControls.appendChild(installDiv);
+            }
+        });
+
+        // Install PWA function for test page
+        window.installTestPWA = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.choiceResult;
+                console.log('Test page PWA install result:', outcome);
+                deferredPrompt = null;
+            }
+        };
 
     </script>
 </body>

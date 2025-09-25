@@ -2,9 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>AI Fitness Dashboard - Machine Learning Powered Training</title>
     <meta name="description" content="Experience the future of fitness with AI-powered workout generation, injury prevention, and personalized training optimization.">
+    
+    <!-- PWA Configuration -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#1e40af">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Khyrie AI">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- iOS Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-180x180.png">
     
     <!-- Stylesheets -->
     <link rel="stylesheet" href="AIDashboard.css">
@@ -131,6 +143,46 @@
             trackFeatureUsage: function(feature) {
                 this.features[feature] = (this.features[feature] || 0) + 1;
                 console.log(`AI Feature Usage: ${feature} - ${this.features[feature]} times`);
+            }
+        };
+
+        // PWA Service Worker Registration
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then((registration) => {
+                    console.log('PWA ServiceWorker registered:', registration);
+                })
+                .catch((error) => {
+                    console.log('PWA ServiceWorker registration failed:', error);
+                });
+        }
+
+        // PWA Install Prompt
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            console.log('PWA install prompt available');
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button or banner
+            const installBanner = document.createElement('div');
+            installBanner.innerHTML = `
+                <div style="position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(45deg, #1e40af, #10b981); color: white; padding: 12px; text-align: center; z-index: 1000; font-size: 14px;">
+                    📱 Install Khyrie as an app for better experience! 
+                    <button onclick="installPWA()" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; margin-left: 10px; cursor: pointer;">Install</button>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; padding: 6px; cursor: pointer; float: right;">×</button>
+                </div>
+            `;
+            document.body.appendChild(installBanner);
+        });
+
+        // Install PWA function
+        window.installPWA = async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.choiceResult;
+                console.log('PWA install result:', outcome);
+                deferredPrompt = null;
             }
         };
     </script>
