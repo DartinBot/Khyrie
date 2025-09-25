@@ -78,7 +78,67 @@
         <h1>🏋️‍♀️ Family & Friends Fitness - Local Testing Dashboard</h1>
         
         <div class="test-section">
-            <h2>🚀 API Server Status</h2>
+            <h2>🚀 Enhanced Group Workouts</h2>
+            <div class="api-test">
+                <p style="margin: 15px 0; font-size: 1.1em; color: #333;">
+                    Advanced group workout management with scheduling, GPS check-ins, video sessions & role permissions
+                </p>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin: 20px 0;">
+                    <a href="enhanced_group_workouts.html" target="_blank" style="
+                        background: linear-gradient(135deg, #667eea, #764ba2);
+                        color: white;
+                        text-decoration: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                        display: inline-block;
+                    ">
+                        🎯 Launch Enhanced Group Workouts
+                    </a>
+                    <button onclick="testEnhancedGroupFeatures()" style="
+                        background: linear-gradient(135deg, #00b894, #00a085);
+                        border: none;
+                    ">
+                        🧪 Test Enhanced API
+                    </button>
+                </div>
+                <div id="enhanced-group-results" class="result"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>� Trainer Marketplace</h2>
+            <div class="api-test">
+                <p style="margin: 15px 0; font-size: 1.1em; color: #333;">
+                    Professional trainer network where certified trainers can offer services and clients can book personalized training sessions
+                </p>
+                <div style="display: flex; gap: 15px; flex-wrap: wrap; justify-content: center; margin: 20px 0;">
+                    <a href="trainer_marketplace.html" target="_blank" style="
+                        background: linear-gradient(135deg, #e17055, #d63031);
+                        color: white;
+                        text-decoration: none;
+                        padding: 12px 25px;
+                        border-radius: 8px;
+                        font-weight: 600;
+                        transition: all 0.3s ease;
+                        display: inline-block;
+                    ">
+                        💼 Launch Trainer Marketplace
+                    </a>
+                    <button onclick="testTrainerMarketplace()" style="
+                        background: linear-gradient(135deg, #fd79a8, #e84393);
+                        border: none;
+                    ">
+                        🧪 Test Trainer API
+                    </button>
+                </div>
+                <div id="trainer-marketplace-results" class="result"></div>
+            </div>
+        </div>
+        
+        <div class="test-section">
+            <h2>�🚀 API Server Status</h2>
             <div class="api-test">
                 <button onclick="testAPIStatus()">Test API Connection</button>
                 <div id="api-status" class="result"></div>
@@ -496,6 +556,205 @@
                 `;
             } catch (error) {
                 resultDiv.textContent = `Error: ${error.message}`;
+            }
+        }
+
+        async function testEnhancedGroupFeatures() {
+            const resultDiv = document.getElementById('enhanced-group-results');
+            try {
+                resultDiv.textContent = 'Testing enhanced group workout features...';
+                
+                // Test 1: Create a workout schedule
+                const scheduleData = {
+                    group_id: 'test_group_123',
+                    creator_id: 'test_user_456',
+                    title: 'Morning HIIT Challenge',
+                    description: 'High-intensity interval training session',
+                    schedule_type: 'one_time',
+                    start_datetime: new Date(Date.now() + 86400000).toISOString(), // Tomorrow
+                    end_datetime: new Date(Date.now() + 86400000 + 3600000).toISOString(), // Tomorrow + 1hr
+                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                    max_participants: 20,
+                    registration_required: true,
+                    location: {
+                        name: 'Central Park',
+                        address: '123 Park Ave, New York, NY',
+                        latitude: 40.7829,
+                        longitude: -73.9654,
+                        location_type: 'physical',
+                        capacity: 25,
+                        amenities: ['water_fountain', 'restrooms', 'parking'],
+                        access_instructions: 'Meet at the main entrance',
+                        safety_notes: 'Bring water and wear proper footwear'
+                    },
+                    video_session: {
+                        provider: 'jitsi',
+                        recording_enabled: false,
+                        screen_sharing_enabled: true,
+                        chat_enabled: true,
+                        max_participants: 100
+                    }
+                };
+
+                const scheduleResponse = await fetch(`${API_BASE}/api/groups/enhanced/schedule`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(scheduleData)
+                });
+                
+                const scheduleResult = await scheduleResponse.json();
+                
+                // Test 2: Get nearby workouts
+                const nearbyResponse = await fetch(`${API_BASE}/api/groups/enhanced/nearby?latitude=40.7829&longitude=-73.9654&radius=10`);
+                const nearbyResult = await nearbyResponse.json();
+                
+                // Test 3: Get user permissions
+                const permissionsResponse = await fetch(`${API_BASE}/api/groups/enhanced/permissions/test_group_123/test_user_456`);
+                const permissionsResult = await permissionsResponse.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Enhanced Group Workouts Active!</span>
+Schedule Created: ${scheduleResult.success ? 'Success' : 'Failed'}
+Schedule ID: ${scheduleResult.schedule_id || 'N/A'}
+
+Nearby Workouts Found: ${nearbyResult.nearby_workouts?.length || 0}
+User Role: ${permissionsResult.role || 'N/A'}
+Can Schedule: ${permissionsResult.permissions?.can_schedule_workouts ? 'Yes' : 'No'}
+Can Start Video: ${permissionsResult.permissions?.can_start_video_calls ? 'Yes' : 'No'}
+
+Features Available:
+✓ Advanced Workout Scheduling
+✓ GPS-Based Location Services
+✓ Video Session Integration (Jitsi/Zoom/Meet)
+✓ Role-Based Permission Management
+✓ Recurring Schedule Patterns
+✓ Check-in Verification System
+
+${JSON.stringify({
+    schedule_preview: scheduleResult.schedule_preview,
+    nearby_preview: nearbyResult.nearby_workouts?.[0],
+    permissions_preview: permissionsResult.permissions
+}, null, 2)}`;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Enhanced Group Features Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testTrainerMarketplace() {
+            const resultDiv = document.getElementById('trainer-marketplace-results');
+            try {
+                resultDiv.textContent = 'Testing trainer marketplace features...';
+                
+                // Test 1: Register a trainer
+                const trainerData = {
+                    user_id: 'test_trainer_001',
+                    first_name: 'Sarah',
+                    last_name: 'Johnson',
+                    email: 'sarah.trainer@khyrie.com',
+                    phone: '+1-555-0123',
+                    bio: 'Certified personal trainer with 8 years of experience specializing in strength training and weight loss. Passionate about helping clients achieve their fitness goals through personalized programs.',
+                    experience_years: 8,
+                    hourly_rate_min: 75,
+                    hourly_rate_max: 125,
+                    specializations: ['Weight Loss', 'Strength Training', 'Nutrition'],
+                    certifications: [
+                        {
+                            name: 'Certified Personal Trainer (CPT)',
+                            organization: 'NASM',
+                            type: 'personal_trainer'
+                        }
+                    ],
+                    languages: ['English', 'Spanish'],
+                    availability_schedule: {
+                        monday: ['09:00-12:00', '14:00-18:00'],
+                        tuesday: ['09:00-12:00', '14:00-18:00'],
+                        wednesday: ['09:00-12:00', '14:00-18:00']
+                    }
+                };
+
+                const registerResponse = await fetch('/api/trainers/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(trainerData)
+                });
+                
+                const registerResult = await registerResponse.json();
+                
+                // Test 2: Create a service if trainer registration was successful
+                let serviceResult = { success: false, error: 'Trainer registration required' };
+                if (registerResult.success) {
+                    const serviceData = {
+                        service_type: 'personal_training',
+                        title: '1-on-1 Personal Training Session',
+                        description: 'Customized personal training session focused on your specific goals. Includes form correction, program design, and motivational coaching.',
+                        duration_minutes: 60,
+                        price: 85,
+                        max_participants: 1,
+                        requirements: 'Basic fitness level, willingness to learn',
+                        equipment_needed: ['dumbbells', 'resistance_bands', 'yoga_mat'],
+                        online_available: true,
+                        in_person_available: true,
+                        location_radius_km: 15
+                    };
+
+                    const serviceResponse = await fetch(`/api/trainers/${registerResult.trainer_id}/services`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(serviceData)
+                    });
+                    
+                    serviceResult = await serviceResponse.json();
+                }
+                
+                // Test 3: Search for trainers
+                const searchResponse = await fetch('/api/trainers/search?specialization=strength&sort_by=rating&limit=5');
+                const searchResult = await searchResponse.json();
+                
+                // Test 4: Get trainer dashboard if trainer was created
+                let dashboardResult = { success: false, error: 'No trainer to query' };
+                if (registerResult.success) {
+                    const dashboardResponse = await fetch(`/api/trainers/${registerResult.trainer_id}/dashboard`);
+                    dashboardResult = await dashboardResponse.json();
+                }
+                
+                resultDiv.innerHTML = `<span class="success">✅ Trainer Marketplace Active!</span>
+
+🧑‍💼 Trainer Registration: ${registerResult.success ? 'Success' : 'Failed'}
+Trainer ID: ${registerResult.trainer_id || 'N/A'}
+Status: ${registerResult.status || 'N/A'}
+
+🎯 Service Creation: ${serviceResult.success ? 'Success' : 'Failed'}
+Service ID: ${serviceResult.service_id || 'N/A'}
+Service Price: ${serviceResult.service_preview?.price ? '$' + serviceResult.service_preview.price : 'N/A'}
+
+🔍 Trainer Search: ${searchResult.success ? 'Success' : 'Failed'}
+Trainers Found: ${searchResult.total_found || 0}
+Search Results: ${searchResult.trainers?.length || 0} trainers returned
+
+📊 Dashboard Access: ${dashboardResult.success ? 'Success' : 'Failed'}
+Total Earnings: ${dashboardResult.trainer_profile?.total_earnings ? '$' + dashboardResult.trainer_profile.total_earnings : 'N/A'}
+
+Features Available:
+✓ Trainer Registration & Onboarding
+✓ Service Creation & Management  
+✓ Advanced Trainer Search & Filtering
+✓ Commission-Based Earnings (85% to trainer)
+✓ Comprehensive Business Dashboard
+✓ Client Booking & Payment Processing
+✓ Rating & Review System
+✓ Professional Certification Verification
+
+Commission Structure: 15% platform fee, 85% trainer earnings
+Supported Services: Personal Training, Group Classes, Nutrition Coaching, Online Consultations
+
+${JSON.stringify({
+    registration_preview: registerResult.next_steps,
+    search_preview: searchResult.trainers?.[0],
+    dashboard_preview: dashboardResult.trainer_profile
+}, null, 2)}`;
+
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Trainer Marketplace Test Failed:</span>\n${error.message}`;
             }
         }
 

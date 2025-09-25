@@ -57,6 +57,8 @@ from family_friends_tools import FamilyFriendsTools
 # Import advanced components
 from advanced_workout_tools import AdvancedWorkoutTools
 from comprehensive_fitness_models import ComprehensiveFitnessDatabase
+from enhanced_group_workouts import EnhancedGroupWorkoutManager
+from trainer_marketplace import TrainerMarketplace
 
 # Initialize FastAPI app with production settings
 app = FastAPI(
@@ -131,12 +133,16 @@ try:
     
     advanced_workout_tools = AdvancedWorkoutTools()
     comprehensive_db = ComprehensiveFitnessDatabase()
+    enhanced_group_manager = EnhancedGroupWorkoutManager()
+    trainer_marketplace = TrainerMarketplace()
     logger.info("Advanced components initialized successfully")
 except Exception as e:
     logger.error(f"Error initializing advanced components: {e}")
     # Fallback to basic functionality
     advanced_workout_tools = None
     comprehensive_db = None
+    enhanced_group_manager = None
+    trainer_marketplace = None
 
 # Include subscription routes
 try:
@@ -1204,6 +1210,290 @@ async def initialize_fresh_database():
         })
     except Exception as e:
         logger.error(f"Error initializing database: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ===============================
+# ENHANCED GROUP WORKOUT ENDPOINTS
+# ===============================
+
+@app.post("/api/groups/enhanced/schedule")
+async def create_enhanced_workout_schedule(request_data: dict):
+    """Create advanced workout schedule with calendar integration."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        group_id = request_data.get("group_id")
+        creator_id = request_data.get("creator_id") 
+        
+        result = enhanced_group_manager.create_workout_schedule(group_id, creator_id, request_data)
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error creating enhanced schedule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/groups/enhanced/nearby")
+async def find_nearby_group_workouts(latitude: float, longitude: float, radius: float = 10):
+    """Find nearby scheduled workouts within radius."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        user_location = {"latitude": latitude, "longitude": longitude}
+        result = enhanced_group_manager.find_nearby_workouts(user_location, radius)
+        return JSONResponse(content={"nearby_workouts": result})
+    except Exception as e:
+        logger.error(f"Error finding nearby workouts: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/groups/enhanced/checkin")
+async def location_checkin_workout(request_data: dict):
+    """GPS-enabled location check-in for workouts."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        schedule_id = request_data.get("schedule_id")
+        user_id = request_data.get("user_id")
+        location_data = request_data.get("location", {})
+        
+        result = enhanced_group_manager.location_check_in(schedule_id, user_id, location_data)
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error processing location check-in: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/groups/enhanced/video/start")
+async def start_enhanced_video_session(request_data: dict):
+    """Start video chat session for virtual workouts."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        schedule_id = request_data.get("schedule_id")
+        host_id = request_data.get("host_id")
+        
+        result = enhanced_group_manager.start_video_session(schedule_id, host_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error starting video session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/groups/enhanced/roles/assign")
+async def assign_enhanced_group_role(request_data: dict):
+    """Assign advanced role permissions to group members."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        from enhanced_group_workouts import GroupRole
+        
+        group_id = request_data.get("group_id")
+        assigner_id = request_data.get("assigner_id")
+        target_user_id = request_data.get("target_user_id")
+        new_role = GroupRole(request_data.get("new_role"))
+        
+        result = enhanced_group_manager.assign_role(group_id, assigner_id, target_user_id, new_role)
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error assigning role: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/groups/enhanced/permissions/{group_id}/{user_id}")
+async def get_enhanced_user_permissions(group_id: str, user_id: str):
+    """Get user's permissions and role capabilities."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        result = enhanced_group_manager.get_user_permissions(group_id, user_id)
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error getting user permissions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/groups/enhanced/schedule/{group_id}")
+async def get_enhanced_group_schedule(group_id: str, days_ahead: int = 30):
+    """Get enhanced group workout schedule with all features."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        result = enhanced_group_manager.get_group_schedule(group_id, days_ahead)
+        return JSONResponse(content={"schedules": result})
+    except Exception as e:
+        logger.error(f"Error getting group schedule: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/groups/enhanced/roles/{role}")
+async def get_role_capabilities(role: str):
+    """Get detailed capabilities for a specific role."""
+    try:
+        if not enhanced_group_manager:
+            raise HTTPException(status_code=500, detail="Enhanced group features not available")
+        
+        from enhanced_group_workouts import GroupRole
+        role_enum = GroupRole(role)
+        
+        result = enhanced_group_manager.get_role_capabilities(role_enum)
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error getting role capabilities: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+# ================== TRAINER MARKETPLACE ENDPOINTS ==================
+
+@app.post("/api/trainers/register")
+async def register_trainer(request: dict):
+    """Register a new trainer with the platform"""
+    try:
+        if not trainer_marketplace:
+            raise HTTPException(status_code=503, detail="Trainer marketplace not available")
+        
+        result = trainer_marketplace.register_trainer(request)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Registration failed"))
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error registering trainer: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/trainers/{trainer_id}/services")
+async def create_trainer_service(trainer_id: str, request: dict):
+    """Create a new service offering for a trainer"""
+    try:
+        if not trainer_marketplace:
+            raise HTTPException(status_code=503, detail="Trainer marketplace not available")
+        
+        # Add trainer_id to request data
+        request["trainer_id"] = trainer_id
+        
+        result = trainer_marketplace.create_service(request)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Service creation failed"))
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating trainer service: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/trainers/search")
+async def search_trainers(
+    specialization: str = None,
+    service_type: str = None,
+    max_price: float = None,
+    min_rating: float = None,
+    online_only: bool = False,
+    in_person_only: bool = False,
+    sort_by: str = "rating",
+    limit: int = 20
+):
+    """Search for trainers based on various criteria"""
+    try:
+        if not trainer_marketplace:
+            raise HTTPException(status_code=503, detail="Trainer marketplace not available")
+        
+        search_params = {
+            "specialization": specialization,
+            "service_type": service_type,
+            "max_price": max_price,
+            "min_rating": min_rating,
+            "online_only": online_only,
+            "in_person_only": in_person_only,
+            "sort_by": sort_by,
+            "limit": limit
+        }
+        
+        # Remove None values
+        search_params = {k: v for k, v in search_params.items() if v is not None and v != False}
+        
+        result = trainer_marketplace.search_trainers(search_params)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Search failed"))
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error searching trainers: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/api/trainers/book-session")
+async def book_trainer_session(request: dict):
+    """Book a training session with a trainer"""
+    try:
+        if not trainer_marketplace:
+            raise HTTPException(status_code=503, detail="Trainer marketplace not available")
+        
+        result = trainer_marketplace.book_session(request)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Booking failed"))
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error booking session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/trainers/{trainer_id}/dashboard")
+async def get_trainer_dashboard(trainer_id: str):
+    """Get comprehensive dashboard data for a trainer"""
+    try:
+        if not trainer_marketplace:
+            raise HTTPException(status_code=503, detail="Trainer marketplace not available")
+        
+        result = trainer_marketplace.get_trainer_dashboard(trainer_id)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=404, detail=result.get("error", "Trainer not found"))
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting trainer dashboard: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.put("/api/trainers/{trainer_id}/status")
+async def update_trainer_status(trainer_id: str, request: dict):
+    """Update trainer status (admin only)"""
+    try:
+        if not trainer_marketplace:
+            raise HTTPException(status_code=503, detail="Trainer marketplace not available")
+        
+        from trainer_marketplace import TrainerStatus
+        
+        new_status = TrainerStatus(request.get("status"))
+        notes = request.get("notes", "")
+        
+        result = trainer_marketplace.update_trainer_status(trainer_id, new_status, notes)
+        
+        if not result.get("success"):
+            raise HTTPException(status_code=400, detail=result.get("error", "Status update failed"))
+        
+        return result
+        
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid status value")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error updating trainer status: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 # Subscription page endpoint
