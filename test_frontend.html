@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Family & Friends Fitness - Test Page</title>
+    <link rel="stylesheet" href="FamilyFriends.css">
+    <link rel="stylesheet" href="SharedWorkout.css">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            margin: 20px 0;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .api-test {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-left: 4px solid #007bff;
+        }
+        .success {
+            color: #28a745;
+        }
+        .error {
+            color: #dc3545;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏋️‍♀️ Family & Friends Fitness - Local Testing Dashboard</h1>
+        
+        <div class="test-section">
+            <h2>🚀 API Server Status</h2>
+            <div class="api-test">
+                <button onclick="testAPIStatus()">Test API Connection</button>
+                <div id="api-status" class="result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>👥 Phase 1: Family & Friends Features</h2>
+            <div class="api-test">
+                <button onclick="testFamilyFeatures()">Test Group Management</button>
+                <div id="family-results" class="result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🎓 Phase 2: Skill Sharing & Mentorship</h2>
+            <div class="api-test">
+                <button onclick="testSkillSharing()">Test Skill Sessions</button>
+                <div id="skill-results" class="result"></div>
+            </div>
+            <div class="api-test">
+                <button onclick="testMentorship()">Test Mentor Matching</button>
+                <div id="mentor-results" class="result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🤝 Phase 3: Real-time Partner Coordination</h2>
+            <div class="api-test">
+                <button onclick="testPartnerMatching()">Test Partner Finding</button>
+                <div id="partner-results" class="result"></div>
+            </div>
+            <div class="api-test">
+                <button onclick="testCommunityFeatures()">Test Community Discovery</button>
+                <div id="community-results" class="result"></div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🏆 Community Leaderboards</h2>
+            <div class="api-test">
+                <button onclick="testLeaderboards()">Test Leaderboards</button>
+                <div id="leaderboard-results" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="FamilyFriends.js"></script>
+    <script src="SharedWorkout.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:8000';
+
+        async function testAPIStatus() {
+            const resultDiv = document.getElementById('api-status');
+            try {
+                resultDiv.textContent = 'Testing API connection...';
+                const response = await fetch(`${API_BASE}/`);
+                const data = await response.json();
+                resultDiv.innerHTML = `<span class="success">✅ API Connected Successfully!</span>\n${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ API Connection Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testFamilyFeatures() {
+            const resultDiv = document.getElementById('family-results');
+            try {
+                resultDiv.textContent = 'Testing family & friends features...';
+                
+                // Test community discovery
+                const response = await fetch(`${API_BASE}/api/community/discover?fitness_interests=strength,cardio`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Family Features Working!</span>\nDiscovered ${data.total_found} community groups\n${JSON.stringify(data.discovered_groups.slice(0, 2), null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Family Features Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testSkillSharing() {
+            const resultDiv = document.getElementById('skill-results');
+            try {
+                resultDiv.textContent = 'Testing skill sharing features...';
+                
+                const response = await fetch(`${API_BASE}/api/skills/available-sessions`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Phase 2: Skill Sharing Active!</span>\nFound ${data.total_sessions} skill sessions\nSkill Categories: ${data.skill_categories.join(', ')}\n${JSON.stringify(data.upcoming_highlights, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Skill Sharing Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testMentorship() {
+            const resultDiv = document.getElementById('mentor-results');
+            try {
+                resultDiv.textContent = 'Testing mentor matching...';
+                
+                const mentorRequest = {
+                    mentee_id: "test_user_123",
+                    fitness_goals: ["strength", "nutrition"],
+                    experience_level: "beginner",
+                    preferred_mentor_qualities: ["patient", "experienced"],
+                    availability: ["weekday_evenings"]
+                };
+
+                const response = await fetch(`${API_BASE}/api/mentorship/find-mentor`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(mentorRequest)
+                });
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Phase 2: Mentor Matching Active!</span>\nFound ${data.matches_found} potential mentors\nTop Match: ${data.recommended_mentors[0]?.name} (${data.recommended_mentors[0]?.match_score}% compatibility)\n${JSON.stringify(data.recommended_mentors[0], null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Mentor Matching Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testPartnerMatching() {
+            const resultDiv = document.getElementById('partner-results');
+            try {
+                resultDiv.textContent = 'Testing workout partner matching...';
+                
+                const partnerRequest = {
+                    user_id: "test_user_123",
+                    workout_type: "strength",
+                    preferred_time: "now",
+                    experience_level: "intermediate",
+                    workout_duration: 60
+                };
+
+                const response = await fetch(`${API_BASE}/api/partners/find-workout-buddy`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(partnerRequest)
+                });
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Phase 3: Partner Coordination Active!</span>\nFound ${data.partners_found} available partners\nBest Match: ${data.available_partners[0]?.name} (${data.available_partners[0]?.compatibility_score}% compatibility)\n${JSON.stringify(data.available_partners[0], null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Partner Matching Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testCommunityFeatures() {
+            const resultDiv = document.getElementById('community-results');
+            try {
+                resultDiv.textContent = 'Testing community discovery...';
+                
+                const response = await fetch(`${API_BASE}/api/community/discover?fitness_interests=strength,yoga&experience_level=intermediate&distance_km=25`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Phase 3: Community Discovery Active!</span>\nFound ${data.total_found} community groups\nTop Match: ${data.discovered_groups[0]?.name} (${data.discovered_groups[0]?.compatibility_score}% compatibility)\n${JSON.stringify(data.discovered_groups[0], null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Community Discovery Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testLeaderboards() {
+            const resultDiv = document.getElementById('leaderboard-results');
+            try {
+                resultDiv.textContent = 'Testing community leaderboards...';
+                
+                const response = await fetch(`${API_BASE}/api/community/leaderboards`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Community Leaderboards Active!</span>\nCommunity Stats:\n- Total Members: ${data.community_stats.total_members}\n- Active Instructors: ${data.community_stats.active_instructors}\n- Available Mentors: ${data.community_stats.available_mentors}\n- Avg Rating: ${data.community_stats.average_community_rating}/5.0\n\nTop Instructor: ${data.leaderboards.top_instructors[0]?.name} (${data.leaderboards.top_instructors[0]?.average_rating}/5.0)`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Leaderboards Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        // Auto-test API status on page load
+        window.addEventListener('load', function() {
+            testAPIStatus();
+        });
+    </script>
+</body>
+</html>
