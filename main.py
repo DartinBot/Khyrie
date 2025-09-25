@@ -21,7 +21,27 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, FileResponse, Response
 from fastapi.staticfiles import StaticFiles
 import os
+import logging
 from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv('.env.production' if os.getenv('ENVIRONMENT') == 'production' else '.env')
+
+# Production settings
+DEBUG = os.getenv("DEBUG", "False").lower() == "true"
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+# Configure logging for production
+if ENVIRONMENT == "production":
+    logging.basicConfig(
+        level=getattr(logging, os.getenv("LOG_LEVEL", "INFO")),
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    )
+else:
+    logging.basicConfig(level=logging.DEBUG)
+
+logger = logging.getLogger(__name__)
 
 # Import local tools and modules
 from fitness_tools import (
@@ -33,25 +53,51 @@ from fitness_tools import (
 # Import family & friends tools (local)
 from family_friends_tools import FamilyFriendsTools
 
-# Initialize FastAPI app
+# Initialize FastAPI app with production settings
 app = FastAPI(
-    title="Fitness Web App API",
-    description="REST API wrapper for 40 fitness MCP tools",
-    version="1.0.0"
+    title="Khyrie Fitness Platform",
+    description="AI-Powered Family Fitness Platform",
+    version="1.0.0",
+    docs_url="/docs" if DEBUG else None,  # Hide docs in production
+    redoc_url="/redoc" if DEBUG else None
 )
 
-# Configure CORS for React frontend and mobile PWA
+# Production CORS settings
+allowed_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://localhost:8000").split(",")
+logger.info(f"Configuring CORS for origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # React dev server
-        "http://localhost:8000",  # FastAPI server
-        "https://khyrie.com",     # Production domain
-    ],
+    allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
+
+# Add security headers middleware for production
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    
+    if ENVIRONMENT == "production":
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+    return response
+
+# Health check endpoint for monitoring
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for production monitoring."""
+    return {
+        "status": "healthy",
+        "environment": ENVIRONMENT,
+        "version": "1.0.0",
+        "debug": DEBUG
+    }
 
 
 
