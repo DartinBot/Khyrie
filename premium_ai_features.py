@@ -6,7 +6,7 @@ Commercial License - Premium Features
 These features require a paid subscription and are protected under commercial licensing.
 """
 
-import requests
+import openai
 import json
 import logging
 import os
@@ -20,52 +20,8 @@ from subscription_manager import SubscriptionManager
 
 logger = logging.getLogger(__name__)
 
-# Configure Anthropic Claude API
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-ANTHROPIC_API_URL = "https://api.anthropic.com/v1/messages"
-
-async def call_claude_api(messages: List[Dict], system_prompt: str = "", max_tokens: int = 1500, temperature: float = 0.7) -> str:
-    """
-    Make API call to Anthropic Claude using requests library.
-    
-    Args:
-        messages: List of message dictionaries
-        system_prompt: System instruction for Claude
-        max_tokens: Maximum tokens to generate
-        temperature: Sampling temperature
-    
-    Returns:
-        Generated text response from Claude
-    """
-    headers = {
-        "x-api-key": ANTHROPIC_API_KEY,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json"
-    }
-    
-    data = {
-        "model": "claude-3-5-sonnet-20241022",
-        "max_tokens": max_tokens,
-        "temperature": temperature,
-        "messages": messages
-    }
-    
-    if system_prompt:
-        data["system"] = system_prompt
-    
-    try:
-        response = requests.post(ANTHROPIC_API_URL, headers=headers, json=data, timeout=60)
-        response.raise_for_status()
-        
-        result = response.json()
-        return result["content"][0]["text"]
-        
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Claude API request failed: {str(e)}")
-        raise HTTPException(status_code=503, detail="AI service temporarily unavailable")
-    except KeyError as e:
-        logger.error(f"Unexpected Claude API response format: {str(e)}")
-        raise HTTPException(status_code=502, detail="AI service response error")
+# Configure OpenAI
+openai.api_key = os.getenv("OPENAI_API_KEY")
 
 class PremiumFeatureError(Exception):
     """Raised when premium feature access is denied."""
@@ -199,13 +155,21 @@ class PremiumAIFeatures:
             Ensure the workout is challenging but appropriate for their fitness level.
             """
             
-            # Call Anthropic Claude 4 for workout generation
-            workout_content = await call_claude_api(
-                messages=[{"role": "user", "content": prompt}],
-                system_prompt="You are an expert personal trainer and exercise physiologist. Create safe, effective, and personalized workout plans based on scientific principles.",
-                max_tokens=1500,
-                temperature=0.7
+            # Call OpenAI GPT-4 for workout generation
+            response = await openai.ChatCompletion.acreate(
+                model="gpt-4",
+                messages=[
+                    {
+                        "role": "system", 
+                        "content": "You are an expert personal trainer and exercise physiologist. Create safe, effective, and personalized workout plans based on scientific principles."
+                    },
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=1500
             )
+            
+            workout_content = response.choices[0].message.content
             
             # Parse and structure the workout plan
             workout_plan = await parse_workout_plan(workout_content)
@@ -350,12 +314,16 @@ class PremiumAIFeatures:
             messages.append({"role": "user", "content": message.message})
             
             # Generate AI coach response
-            coach_response = await call_claude_api(
+            response = await openai.ChatCompletion.acreate(
+                model="gpt-4",
                 messages=messages,
-                system_prompt="You are a supportive, knowledgeable fitness coach who provides personalized guidance, motivation, and expertise. Always maintain an encouraging but professional tone.",
+                temperature=0.8,
                 max_tokens=600,
-                temperature=0.8
+                presence_penalty=0.1,
+                frequency_penalty=0.1
             )
+            
+            coach_response = response.choices[0].message.content
             
             # Analyze response sentiment and coaching approach
             coaching_analysis = analyze_coaching_response(coach_response)
