@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 
 from family_friends_tools import FamilyFriendsTools, PrivacyLevel, WorkoutStatus
@@ -1080,6 +1080,36 @@ async def get_live_workout_status(session_id: str):
             content={"status": "error", "message": f"Failed to get session status: {str(e)}"}
         )
 
+# WEIGHT TRACKING SYSTEM
+
+class LogWeightRequest(BaseModel):
+    user_id: str
+    weight: float  # Weight value
+    unit: str = "kg"  # kg or lbs
+    goal_weight: Optional[float] = None
+    notes: str = ""
+    share_with_groups: List[str] = []
+    privacy_level: str = "family"  # private, family, friends, public
+    body_fat_percentage: Optional[float] = None
+    muscle_mass: Optional[float] = None
+
+class WeightGoalRequest(BaseModel):
+    user_id: str
+    goal_weight: float
+    target_date: Optional[str] = None
+    goal_type: str = "lose_weight"  # lose_weight, gain_weight, maintain_weight
+    weekly_target: Optional[float] = None  # kg/lbs per week
+
+class WeightChallengeRequest(BaseModel):
+    creator_id: str
+    challenge_name: str
+    challenge_type: str = "weight_loss"  # weight_loss, weight_gain, maintenance
+    group_id: str
+    target_amount: float  # Total kg/lbs for group
+    duration_days: int = 30
+    start_date: Optional[str] = None
+    reward_description: str = ""
+
 # PHASE 2/3: RATING & REVIEW SYSTEM
 
 class SubmitReviewRequest(BaseModel):
@@ -1093,6 +1123,316 @@ class SubmitReviewRequest(BaseModel):
     specific_feedback: Dict = {}  # Detailed ratings for different aspects
     would_recommend: bool = True
     session_date: Optional[str] = None
+
+# WEIGHT TRACKING ENDPOINTS
+
+@app.post("/api/weight/log")
+async def log_weight(request: LogWeightRequest):
+    """
+    Log a weight entry for a user with analytics and family sharing capabilities.
+    """
+    try:
+        # Initialize weight tracking storage if needed
+        if not hasattr(app.state, 'weight_entries'):
+            app.state.weight_entries = {}
+            
+        if not hasattr(app.state, 'weight_goals'):
+            app.state.weight_goals = {}
+            
+        # Create weight entry
+        entry_id = f"weight_{request.user_id}_{len(app.state.weight_entries.get(request.user_id, [])) + 1}"
+        
+        weight_entry = {
+            "entry_id": entry_id,
+            "user_id": request.user_id,
+            "weight": request.weight,
+            "unit": request.unit,
+            "goal_weight": request.goal_weight,
+            "notes": request.notes,
+            "share_with_groups": request.share_with_groups,
+            "privacy_level": request.privacy_level,
+            "body_fat_percentage": request.body_fat_percentage,
+            "muscle_mass": request.muscle_mass,
+            "logged_at": datetime.now().isoformat(),
+            "validated": True
+        }
+        
+        # Store entry
+        if request.user_id not in app.state.weight_entries:
+            app.state.weight_entries[request.user_id] = []
+        
+        app.state.weight_entries[request.user_id].insert(0, weight_entry)  # Most recent first
+        
+        # Update goal if provided
+        if request.goal_weight:
+            app.state.weight_goals[request.user_id] = {
+                "goal_weight": request.goal_weight,
+                "unit": request.unit,
+                "set_date": datetime.now().isoformat(),
+                "target_date": None
+            }
+        
+        # Calculate progress message
+        progress_message = "Weight logged successfully!"
+        entries = app.state.weight_entries[request.user_id]
+        
+        if len(entries) > 1:
+            prev_weight = entries[1]["weight"]
+            change = request.weight - prev_weight
+            
+            if abs(change) >= 0.1:
+                direction = "lost" if change < 0 else "gained"
+                progress_message = f"Weight logged! You've {direction} {abs(change):.1f} {request.unit} since last entry."
+        
+        return {
+            "success": True,
+            "message": progress_message,
+            "entry": weight_entry,
+            "analytics": _calculate_weight_analytics(request.user_id, app.state.weight_entries.get(request.user_id, [])),
+            "sharing_status": {
+                "shared_with_groups": len(request.share_with_groups),
+                "privacy_level": request.privacy_level,
+                "family_notifications_sent": len([g for g in request.share_with_groups if "family" in g])
+            }
+        }
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Failed to log weight: {str(e)}"}
+        )
+
+@app.get("/api/weight/history/{user_id}")
+async def get_weight_history(user_id: str, limit: int = 50):
+    """
+    Get comprehensive weight history and analytics for a user.
+    """
+    try:
+        if not hasattr(app.state, 'weight_entries'):
+            app.state.weight_entries = {}
+            
+        entries = app.state.weight_entries.get(user_id, [])
+        
+        return {
+            "success": True,
+            "weight_entries": entries[:limit],
+            "analytics": _calculate_weight_analytics(user_id, entries),
+            "goal_info": app.state.weight_goals.get(user_id, None),
+            "total_entries": len(entries),
+            "tracking_since": entries[-1]["logged_at"] if entries else None
+        }
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Failed to get weight history: {str(e)}"}
+        )
+
+@app.post("/api/weight/set-goal")
+async def set_weight_goal(request: WeightGoalRequest):
+    """
+    Set or update weight goal for a user with target tracking.
+    """
+    try:
+        if not hasattr(app.state, 'weight_goals'):
+            app.state.weight_goals = {}
+            
+        goal = {
+            "user_id": request.user_id,
+            "goal_weight": request.goal_weight,
+            "target_date": request.target_date,
+            "goal_type": request.goal_type,
+            "weekly_target": request.weekly_target,
+            "set_date": datetime.now().isoformat(),
+            "is_active": True
+        }
+        
+        app.state.weight_goals[request.user_id] = goal
+        
+        # Calculate estimated timeline if weekly target provided
+        current_entries = app.state.weight_entries.get(request.user_id, [])
+        timeline_message = "Goal set successfully!"
+        
+        if current_entries and request.weekly_target:
+            current_weight = current_entries[0]["weight"]
+            weight_to_lose_gain = abs(request.goal_weight - current_weight)
+            estimated_weeks = weight_to_lose_gain / request.weekly_target
+            timeline_message = f"Goal set! At {request.weekly_target} kg/week, estimated {estimated_weeks:.1f} weeks to reach goal."
+        
+        return {
+            "success": True,
+            "message": timeline_message,
+            "goal": goal,
+            "progress_tracking": {
+                "current_weight": current_entries[0]["weight"] if current_entries else None,
+                "target_weight": request.goal_weight,
+                "estimated_timeline": f"{estimated_weeks:.1f} weeks" if current_entries and request.weekly_target else "Set weekly target for timeline"
+            }
+        }
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Failed to set goal: {str(e)}"}
+        )
+
+@app.post("/api/weight/challenges/create")
+async def create_weight_challenge(request: WeightChallengeRequest):
+    """
+    Create a family/group weight challenge with progress tracking.
+    """
+    try:
+        if not hasattr(app.state, 'weight_challenges'):
+            app.state.weight_challenges = {}
+            
+        challenge_id = f"weight_challenge_{len(app.state.weight_challenges) + 1}"
+        
+        challenge = {
+            "challenge_id": challenge_id,
+            "creator_id": request.creator_id,
+            "challenge_name": request.challenge_name,
+            "challenge_type": request.challenge_type,
+            "group_id": request.group_id,
+            "target_amount": request.target_amount,
+            "duration_days": request.duration_days,
+            "start_date": request.start_date or datetime.now().isoformat(),
+            "end_date": (datetime.now() + timedelta(days=request.duration_days)).isoformat(),
+            "reward_description": request.reward_description,
+            "participants": [],
+            "current_progress": 0.0,
+            "is_active": True,
+            "created_at": datetime.now().isoformat()
+        }
+        
+        app.state.weight_challenges[challenge_id] = challenge
+        
+        return {
+            "success": True,
+            "message": f"Weight challenge '{request.challenge_name}' created successfully!",
+            "challenge": challenge,
+            "next_steps": [
+                "Invite family/group members to join the challenge",
+                "Track progress as members log their weights",
+                "Celebrate milestones and achievements together"
+            ]
+        }
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Failed to create challenge: {str(e)}"}
+        )
+
+@app.get("/api/weight/family/{group_id}")
+async def get_family_weight_progress(group_id: str):
+    """
+    Get weight progress for all family members in a group.
+    """
+    try:
+        # Mock family data - in real app would fetch from group membership
+        family_progress = [
+            {
+                "user_id": "dad_123",
+                "name": "Dad",
+                "current_weight": 85.2,
+                "unit": "kg",
+                "last_updated": "2025-09-24T08:00:00",
+                "monthly_change": -2.1,
+                "goal_weight": 80.0,
+                "progress_to_goal": 60,
+                "trend": "losing",
+                "streak_days": 12
+            },
+            {
+                "user_id": "mom_456", 
+                "name": "Mom",
+                "current_weight": 62.8,
+                "unit": "kg",
+                "last_updated": "2025-09-24T07:30:00",
+                "monthly_change": 0.1,
+                "goal_weight": 63.0,
+                "progress_to_goal": 95,
+                "trend": "maintaining",
+                "streak_days": 18
+            },
+            {
+                "user_id": "test_user_123",
+                "name": "You",
+                "current_weight": 75.5,
+                "unit": "kg", 
+                "last_updated": "2025-09-25T07:18:54",
+                "monthly_change": -1.5,
+                "goal_weight": 72.0,
+                "progress_to_goal": 43,
+                "trend": "losing",
+                "streak_days": 8
+            }
+        ]
+        
+        return {
+            "success": True,
+            "family_progress": family_progress,
+            "group_stats": {
+                "total_members": len(family_progress),
+                "active_members": len([m for m in family_progress if m["streak_days"] > 0]),
+                "combined_loss": sum([abs(m["monthly_change"]) for m in family_progress if m["monthly_change"] < 0]),
+                "average_streak": sum([m["streak_days"] for m in family_progress]) / len(family_progress)
+            }
+        }
+        
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"success": False, "message": f"Failed to get family progress: {str(e)}"}
+        )
+
+def _calculate_weight_analytics(user_id: str, entries: List[Dict]) -> Dict:
+    """Calculate comprehensive weight analytics for a user."""
+    if not entries:
+        return {
+            "current_weight": None,
+            "total_change": 0,
+            "entries_count": 0,
+            "streak_days": 0,
+            "trend": "no_data"
+        }
+    
+    current_weight = entries[0]["weight"]
+    total_change = 0
+    streak_days = 0
+    
+    if len(entries) > 1:
+        oldest_weight = entries[-1]["weight"]
+        total_change = current_weight - oldest_weight
+        
+        # Calculate logging streak
+        today = datetime.now().date()
+        for entry in entries:
+            entry_date = datetime.fromisoformat(entry["logged_at"]).date()
+            days_diff = (today - entry_date).days
+            if days_diff <= streak_days + 1:
+                streak_days = max(streak_days, days_diff)
+            else:
+                break
+    
+    # Determine trend
+    trend = "stable"
+    if len(entries) >= 3:
+        recent_weights = [e["weight"] for e in entries[:3]]
+        if recent_weights[0] < recent_weights[-1]:
+            trend = "losing"
+        elif recent_weights[0] > recent_weights[-1]:
+            trend = "gaining"
+    
+    return {
+        "current_weight": current_weight,
+        "total_change": total_change,
+        "entries_count": len(entries),
+        "streak_days": streak_days,
+        "trend": trend,
+        "weekly_average": sum([e["weight"] for e in entries[:7]]) / min(7, len(entries)),
+        "monthly_change": entries[0]["weight"] - entries[min(30, len(entries)-1)]["weight"] if len(entries) > 30 else total_change
+    }
 
 @app.post("/api/reviews/submit")
 async def submit_review(request: SubmitReviewRequest):

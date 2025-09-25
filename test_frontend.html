@@ -6,6 +6,7 @@
     <title>Family & Friends Fitness - Test Page</title>
     <link rel="stylesheet" href="FamilyFriends.css">
     <link rel="stylesheet" href="SharedWorkout.css">
+    <link rel="stylesheet" href="WeightTracker.css">
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -108,10 +109,30 @@
                 <div id="leaderboard-results" class="result"></div>
             </div>
         </div>
+
+        <div class="test-section">
+            <h2>⚖️ Weight Tracking System</h2>
+            <div class="api-test">
+                <button onclick="testWeightLogging()">Test Weight Logging</button>
+                <div id="weight-log-results" class="result"></div>
+            </div>
+            <div class="api-test">
+                <button onclick="testWeightHistory()">Test Weight History</button>
+                <div id="weight-history-results" class="result"></div>
+            </div>
+            <div class="api-test">
+                <button onclick="testFamilyWeightProgress()">Test Family Progress</button>
+                <div id="family-weight-results" class="result"></div>
+            </div>
+        </div>
+
+        <!-- Weight Tracker Component will be inserted here -->
+        <div id="weight-tracker-container"></div>
     </div>
 
     <script src="FamilyFriends.js"></script>
     <script src="SharedWorkout.js"></script>
+    <script src="WeightTracker.js"></script>
     <script>
         const API_BASE = 'http://localhost:8000';
 
@@ -237,6 +258,64 @@
                 resultDiv.innerHTML = `<span class="success">✅ Community Leaderboards Active!</span>\nCommunity Stats:\n- Total Members: ${data.community_stats.total_members}\n- Active Instructors: ${data.community_stats.active_instructors}\n- Available Mentors: ${data.community_stats.available_mentors}\n- Avg Rating: ${data.community_stats.average_community_rating}/5.0\n\nTop Instructor: ${data.leaderboards.top_instructors[0]?.name} (${data.leaderboards.top_instructors[0]?.average_rating}/5.0)`;
             } catch (error) {
                 resultDiv.innerHTML = `<span class="error">❌ Leaderboards Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testWeightLogging() {
+            const resultDiv = document.getElementById('weight-log-results');
+            try {
+                resultDiv.textContent = 'Testing weight logging...';
+                
+                const weightData = {
+                    user_id: "test_user_123",
+                    weight: 75.5,
+                    unit: "kg",
+                    notes: "Morning weigh-in after workout",
+                    share_with_groups: ["family_group_1"],
+                    privacy_level: "family",
+                    goal_weight: 72.0
+                };
+
+                const response = await fetch(`${API_BASE}/api/weight/log`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(weightData)
+                });
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Weight Tracking Active!</span>\n${data.message}\nAnalytics: ${data.analytics.trend} trend, ${data.analytics.entries_count} total entries\n${JSON.stringify(data.entry, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Weight Logging Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testWeightHistory() {
+            const resultDiv = document.getElementById('weight-history-results');
+            try {
+                resultDiv.textContent = 'Testing weight history...';
+                
+                const response = await fetch(`${API_BASE}/api/weight/history/test_user_123`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Weight History Loaded!</span>\nTotal Entries: ${data.total_entries}\nAnalytics: ${data.analytics.current_weight} kg current, ${data.analytics.total_change.toFixed(1)} kg total change\nStreak: ${data.analytics.streak_days} days\n${JSON.stringify(data.analytics, null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Weight History Test Failed:</span>\n${error.message}`;
+            }
+        }
+
+        async function testFamilyWeightProgress() {
+            const resultDiv = document.getElementById('family-weight-results');
+            try {
+                resultDiv.textContent = 'Testing family weight progress...';
+                
+                const response = await fetch(`${API_BASE}/api/weight/family/family_group_1`);
+                const data = await response.json();
+                
+                resultDiv.innerHTML = `<span class="success">✅ Family Weight Progress Loaded!</span>\nFamily Members: ${data.group_stats.total_members}\nActive Members: ${data.group_stats.active_members}\nCombined Loss: ${data.group_stats.combined_loss.toFixed(1)} kg\n${JSON.stringify(data.family_progress[0], null, 2)}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<span class="error">❌ Family Progress Test Failed:</span>\n${error.message}`;
             }
         }
 
