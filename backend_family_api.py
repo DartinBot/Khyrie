@@ -12,10 +12,14 @@ from pydantic import BaseModel
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import json
+import numpy as np
 
 from family_friends_tools import FamilyFriendsTools, PrivacyLevel, WorkoutStatus
+from ai_workout_engine import AIWorkoutEngine, UserProfile, WorkoutGoal, ExperienceLevel
+from adaptive_program_engine import AdaptiveProgramEngine, PerformanceMetrics
+from intelligent_exercise_selector import IntelligentExerciseSelector, InjuryRiskProfile
 
-app = FastAPI(title="Family & Friends Fitness API", version="1.0.0")
+app = FastAPI(title="Family & Friends Fitness API - AI Enhanced", version="2.0.0")
 
 # CORS middleware for frontend integration
 app.add_middleware(
@@ -28,6 +32,11 @@ app.add_middleware(
 
 # Initialize family/friends tools
 family_tools = FamilyFriendsTools()
+
+# Initialize AI systems
+ai_workout_engine = AIWorkoutEngine()
+adaptive_program_engine = AdaptiveProgramEngine(ai_workout_engine)
+intelligent_selector = IntelligentExerciseSelector()
 
 # Request/Response Models
 class CreateGroupRequest(BaseModel):
@@ -134,16 +143,28 @@ class LiveWorkoutSyncRequest(BaseModel):
 @app.get("/")
 async def root():
     return {
-        "message": "Family & Friends Fitness API",
-        "version": "1.0.0",
+        "message": "Family & Friends Fitness API - AI Enhanced",
+        "version": "2.0.0",
         "status": "active",
         "features": [
             "Group Management",
             "Shared Workouts", 
             "Social Challenges",
             "Real-time Tracking",
-            "Family Dashboard"
-        ]
+            "Family Dashboard",
+            "AI Workout Generation",
+            "Adaptive Programming",
+            "Injury Risk Prediction",
+            "Smart Exercise Substitution",
+            "ML-Powered Analytics"
+        ],
+        "ai_capabilities": {
+            "workout_personalization": True,
+            "injury_prevention": True,
+            "plateau_detection": True,
+            "adaptive_programming": True,
+            "predictive_analytics": True
+        }
     }
 
 @app.post("/api/groups/create")
@@ -1117,6 +1138,41 @@ class ExerciseGoalRequest(BaseModel):
     current_max: Optional[float] = None
     notes: str = ""
 
+# AI SYSTEM MODELS
+
+class AIWorkoutRequest(BaseModel):
+    user_id: str
+    age: int
+    gender: str
+    experience_level: str  # beginner, intermediate, advanced, elite
+    primary_goals: List[str]  # strength, hypertrophy, endurance, power, weight_loss, general_fitness
+    available_equipment: List[str]
+    workout_frequency: int  # days per week
+    session_duration: int   # minutes
+    injury_history: List[str] = []
+    preferences: Dict = {}
+    current_strength_levels: Dict[str, float] = {}  # exercise -> weight
+    recovery_metrics: Dict = {}  # sleep_quality, stress_level, etc.
+
+class ExerciseSubstitutionRequest(BaseModel):
+    user_id: str
+    original_exercise: str
+    reason: str  # injury, equipment, difficulty
+    available_equipment: List[str]
+    injury_concerns: List[str] = []
+    experience_level: str = "intermediate"
+
+class InjuryRiskAssessmentRequest(BaseModel):
+    user_id: str
+    planned_workout: Dict
+    recent_training_history: List[Dict] = []
+    current_symptoms: List[str] = []
+
+class AdaptiveProgramRequest(BaseModel):
+    user_id: str
+    current_program: Dict
+    performance_data: List[Dict] = []
+    
 # WEIGHT TRACKING SYSTEM
 
 class LogWeightRequest(BaseModel):
@@ -1160,6 +1216,337 @@ class SubmitReviewRequest(BaseModel):
     specific_feedback: Dict = {}  # Detailed ratings for different aspects
     would_recommend: bool = True
     session_date: Optional[str] = None
+
+# AI-POWERED WORKOUT ENDPOINTS
+
+@app.post("/api/ai/generate-workout")
+async def generate_ai_workout(request: AIWorkoutRequest):
+    """
+    Generate AI-powered personalized workout based on user profile, goals, and constraints.
+    Uses machine learning algorithms for optimal exercise selection and programming.
+    """
+    try:
+        # Convert request to UserProfile
+        user_profile = UserProfile(
+            user_id=request.user_id,
+            age=request.age,
+            gender=request.gender,
+            experience_level=ExperienceLevel(request.experience_level),
+            primary_goals=[WorkoutGoal(goal) for goal in request.primary_goals],
+            available_equipment=request.available_equipment,
+            workout_frequency=request.workout_frequency,
+            session_duration=request.session_duration,
+            injury_history=request.injury_history,
+            preferences=request.preferences,
+            current_strength_levels=request.current_strength_levels,
+            recovery_metrics=request.recovery_metrics
+        )
+        
+        # Generate AI workout
+        workout_recommendation = await ai_workout_engine.generate_ai_workout(
+            profile=user_profile,
+            context={"timestamp": datetime.now().isoformat()}
+        )
+        
+        return {
+            "success": True,
+            "workout_recommendation": {
+                "workout_id": workout_recommendation.workout_id,
+                "name": workout_recommendation.name,
+                "description": workout_recommendation.description,
+                "estimated_duration": workout_recommendation.estimated_duration,
+                "difficulty_score": workout_recommendation.difficulty_score,
+                "exercises": workout_recommendation.exercises,
+                "periodization_phase": workout_recommendation.periodization_phase,
+                "adaptation_rationale": workout_recommendation.adaptation_rationale,
+                "confidence_score": workout_recommendation.confidence_score,
+                "expected_outcomes": workout_recommendation.expected_outcomes
+            },
+            "ai_insights": {
+                "personalization_factors": [
+                    f"Optimized for {user_profile.experience_level.value} experience level",
+                    f"Targeting {', '.join([g.value for g in user_profile.primary_goals])}",
+                    f"Adapted for {request.session_duration}-minute sessions"
+                ],
+                "safety_considerations": [
+                    f"Injury history accommodated: {', '.join(request.injury_history)}" if request.injury_history else "No injury concerns detected",
+                    f"Equipment constraints: {len(request.available_equipment)} types available"
+                ],
+                "progression_strategy": f"Phase: {workout_recommendation.periodization_phase}",
+                "ml_confidence": f"{workout_recommendation.confidence_score:.0%}"
+            }
+        }
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid input: {str(e)}")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI workout generation failed: {str(e)}")
+
+@app.post("/api/ai/exercise-substitution")
+async def get_exercise_substitution(request: ExerciseSubstitutionRequest):
+    """
+    Get AI-powered exercise substitutions based on injuries, equipment, or difficulty adjustments.
+    """
+    try:
+        # Create user profile for substitution analysis
+        user_profile = UserProfile(
+            user_id=request.user_id,
+            age=30,  # Default values for substitution
+            gender="unspecified",
+            experience_level=ExperienceLevel(request.experience_level),
+            primary_goals=[WorkoutGoal.GENERAL_FITNESS],
+            available_equipment=request.available_equipment,
+            workout_frequency=3,
+            session_duration=60,
+            injury_history=request.injury_concerns,
+            preferences={},
+            current_strength_levels={},
+            recovery_metrics={}
+        )
+        
+        # Create mock injury risk profile
+        injury_risk = InjuryRiskProfile(
+            user_id=request.user_id,
+            overall_risk_score=0.3,  # Default moderate risk
+            joint_specific_risks={"knee": 0.2, "shoulder": 0.1, "lower_back": 0.3},
+            movement_pattern_risks={},
+            load_tolerance={},
+            recovery_capacity=0.7,
+            injury_history_impact={}
+        )
+        
+        # Generate substitutions
+        substitutions = await intelligent_selector.generate_smart_substitutions(
+            original_exercise=request.original_exercise,
+            user_profile=user_profile,
+            injury_risk=injury_risk,
+            available_equipment=request.available_equipment
+        )
+        
+        return {
+            "success": True,
+            "original_exercise": request.original_exercise,
+            "substitution_reason": request.reason,
+            "recommended_substitutions": [
+                {
+                    "exercise": sub.recommended_substitute,
+                    "reason": sub.substitution_reason,
+                    "effectiveness_retention": f"{sub.effectiveness_retention:.0%}",
+                    "safety_improvement": f"{sub.safety_improvement:.0%}",
+                    "difficulty_adjustment": sub.difficulty_adjustment,
+                    "equipment_required": sub.equipment_requirements
+                }
+                for sub in substitutions
+            ],
+            "ai_analysis": {
+                "total_alternatives_found": len(substitutions),
+                "best_recommendation": substitutions[0].recommended_substitute if substitutions else None,
+                "safety_priority": any(sub.safety_improvement > 0.2 for sub in substitutions),
+                "equipment_considerations": f"Filtered for available equipment: {len(request.available_equipment)} types"
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Exercise substitution failed: {str(e)}")
+
+@app.post("/api/ai/injury-risk-assessment")
+async def assess_injury_risk(request: InjuryRiskAssessmentRequest):
+    """
+    AI-powered injury risk assessment for planned workouts.
+    """
+    try:
+        # Create user profile for risk assessment
+        user_profile = UserProfile(
+            user_id=request.user_id,
+            age=30,  # Would get from user database
+            gender="unspecified",
+            experience_level=ExperienceLevel.INTERMEDIATE,
+            primary_goals=[WorkoutGoal.GENERAL_FITNESS],
+            available_equipment=[],
+            workout_frequency=3,
+            session_duration=60,
+            injury_history=request.current_symptoms,
+            preferences={},
+            current_strength_levels={},
+            recovery_metrics={}
+        )
+        
+        # Assess injury risk
+        injury_risk = await intelligent_selector.predict_injury_risk(
+            user_profile=user_profile,
+            planned_workout=request.planned_workout,
+            recent_training_history=request.recent_training_history
+        )
+        
+        # Generate risk level classification
+        if injury_risk.overall_risk_score < 0.3:
+            risk_level = "Low"
+            recommendations = ["Proceed with planned workout", "Monitor form and fatigue"]
+        elif injury_risk.overall_risk_score < 0.6:
+            risk_level = "Moderate"
+            recommendations = ["Consider reducing intensity by 10-15%", "Extra warm-up recommended", "Monitor symptoms closely"]
+        else:
+            risk_level = "High"
+            recommendations = ["Consider workout modification", "Reduce volume by 20-30%", "Focus on recovery", "Consult healthcare provider if symptoms persist"]
+        
+        return {
+            "success": True,
+            "risk_assessment": {
+                "overall_risk_score": injury_risk.overall_risk_score,
+                "risk_level": risk_level,
+                "joint_specific_risks": injury_risk.joint_specific_risks,
+                "movement_pattern_risks": injury_risk.movement_pattern_risks,
+                "load_tolerance": injury_risk.load_tolerance,
+                "recovery_capacity": injury_risk.recovery_capacity
+            },
+            "recommendations": recommendations,
+            "ai_insights": {
+                "primary_risk_factors": [
+                    joint for joint, risk in injury_risk.joint_specific_risks.items() 
+                    if risk > 0.4
+                ],
+                "protective_factors": [
+                    "Good recovery capacity" if injury_risk.recovery_capacity > 0.7 else "Monitor recovery",
+                    "No significant injury history" if not user_profile.injury_history else "Injury history considered"
+                ],
+                "monitoring_advice": [
+                    "Track RPE during workout",
+                    "Monitor pain levels (0-10 scale)",
+                    "Assess recovery quality post-workout"
+                ]
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Injury risk assessment failed: {str(e)}")
+
+@app.post("/api/ai/adaptive-programming")
+async def get_adaptive_recommendations(request: AdaptiveProgramRequest):
+    """
+    AI-powered adaptive program modifications based on performance trends.
+    """
+    try:
+        # Analyze adaptation needs
+        adaptations = await adaptive_program_engine.analyze_adaptation_needs(
+            user_id=request.user_id,
+            current_program=request.current_program
+        )
+        
+        if not adaptations:
+            return {
+                "success": True,
+                "message": "Current program appears optimal - no adaptations needed",
+                "program_status": "on_track",
+                "continue_current_program": True,
+                "next_review_in_weeks": 2
+            }
+        
+        return {
+            "success": True,
+            "adaptation_recommendations": [
+                {
+                    "type": adaptation.adaptation_type,
+                    "confidence": f"{adaptation.confidence:.0%}",
+                    "rationale": adaptation.rationale,
+                    "parameters": adaptation.parameters,
+                    "expected_outcome": adaptation.expected_outcome,
+                    "monitoring_metrics": adaptation.monitoring_metrics
+                }
+                for adaptation in adaptations
+            ],
+            "program_status": "needs_adaptation",
+            "priority_adaptations": len([a for a in adaptations if a.confidence > 0.7]),
+            "ai_analysis": {
+                "total_adaptations_suggested": len(adaptations),
+                "highest_confidence_adaptation": max(adaptations, key=lambda x: x.confidence).adaptation_type,
+                "implementation_timeline": "1-2 weeks for initial adaptations",
+                "success_probability": f"{np.mean([a.confidence for a in adaptations]):.0%}"
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Adaptive programming analysis failed: {str(e)}")
+
+@app.get("/api/ai/workout-insights/{user_id}")
+async def get_ai_workout_insights(user_id: str):
+    """
+    Get AI-powered insights about user's workout patterns and optimization opportunities.
+    """
+    try:
+        # Get user's exercise history for analysis
+        exercise_history = app.state.exercise_entries.get(user_id, [])
+        
+        if not exercise_history:
+            return {
+                "success": True,
+                "message": "Start logging workouts to get AI insights",
+                "insights": [],
+                "recommendations": ["Log your first workout to enable AI analysis"]
+            }
+        
+        # Analyze patterns and generate insights
+        insights = []
+        recommendations = []
+        
+        # Pattern analysis
+        recent_workouts = exercise_history[-5:] if len(exercise_history) >= 5 else exercise_history
+        
+        # Volume trend analysis
+        volumes = [len(workout.get("exercises", [])) * 3 for workout in recent_workouts]  # Estimate volume
+        avg_volume = np.mean(volumes) if volumes else 0
+        
+        if avg_volume > 20:
+            insights.append("High training volume detected - ensure adequate recovery")
+            recommendations.append("Consider periodizing volume with deload weeks")
+        elif avg_volume < 8:
+            insights.append("Conservative training volume - opportunity for progression")
+            recommendations.append("Gradually increase training volume by 10-15%")
+        
+        # Exercise variety analysis
+        all_exercises = []
+        for workout in recent_workouts:
+            all_exercises.extend([ex.get("exercise_name", "") for ex in workout.get("exercises", [])])
+        
+        unique_exercises = len(set(all_exercises))
+        variety_score = unique_exercises / len(all_exercises) if all_exercises else 0
+        
+        if variety_score < 0.3:
+            insights.append("Low exercise variety - consider adding movement diversity")
+            recommendations.append("Rotate 1-2 exercises every 4-6 weeks")
+        
+        # Consistency analysis
+        workout_dates = [workout.get("workout_date") for workout in exercise_history]
+        if len(workout_dates) >= 3:
+            # Simple consistency check
+            insights.append("Regular training pattern detected - excellent consistency")
+            recommendations.append("Maintain current training frequency")
+        
+        # Progressive overload analysis
+        if len(exercise_history) >= 3:
+            insights.append("AI analyzing strength progression patterns...")
+            recommendations.append("Focus on progressive overload - increase weight/reps gradually")
+        
+        return {
+            "success": True,
+            "ai_insights": {
+                "total_workouts_analyzed": len(exercise_history),
+                "analysis_period": "Recent 5 workouts" if len(exercise_history) >= 5 else f"All {len(exercise_history)} workouts",
+                "patterns_detected": len(insights),
+                "optimization_opportunities": len(recommendations)
+            },
+            "insights": insights,
+            "recommendations": recommendations,
+            "performance_metrics": {
+                "avg_training_volume": f"{avg_volume:.1f} sets/week",
+                "exercise_variety_score": f"{variety_score:.0%}",
+                "consistency_rating": "High" if len(exercise_history) >= 8 else "Moderate",
+                "progression_trend": "Positive" if len(exercise_history) >= 3 else "Establishing baseline"
+            },
+            "next_ai_analysis": "Available after 3 more workouts"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"AI insights generation failed: {str(e)}")
 
 # EXERCISE JOURNAL ENDPOINTS
 

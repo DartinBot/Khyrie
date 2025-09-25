@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fitness Dashboard - Machine Learning Powered Training</title>
+    <meta name="description" content="Experience the future of fitness with AI-powered workout generation, injury prevention, and personalized training optimization.">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="AIDashboard.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+    
+    <!-- Open Graph Meta Tags -->
+    <meta property="og:title" content="AI Fitness Dashboard - Machine Learning Powered Training">
+    <meta property="og:description" content="Advanced AI algorithms for personalized workout generation, injury prevention, and performance optimization.">
+    <meta property="og:type" content="website">
+    
+    <!-- Preload critical resources -->
+    <link rel="preload" href="AIDashboard.js" as="script">
+</head>
+<body>
+    <!-- AI Dashboard will be rendered here by JavaScript -->
+    <div id="loading-screen" style="
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    ">
+        <div style="font-size: 4rem; margin-bottom: 1rem; animation: pulse 2s infinite;">🧠</div>
+        <h1 style="margin: 0 0 0.5rem 0; font-size: 2rem; font-weight: 700;">AI Fitness Coach</h1>
+        <p style="margin: 0 0 2rem 0; font-size: 1.1rem; opacity: 0.9;">Initializing Machine Learning Systems...</p>
+        <div style="
+            width: 60px;
+            height: 60px;
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-left: 6px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        "></div>
+    </div>
+
+    <style>
+        @keyframes pulse {
+            0% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.05); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+        
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        
+        #loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+    </style>
+
+    <!-- AI Dashboard JavaScript -->
+    <script src="AIDashboard.js"></script>
+    
+    <script>
+        // Hide loading screen once AI dashboard is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(() => {
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                    loadingScreen.classList.add('hidden');
+                    setTimeout(() => {
+                        loadingScreen.style.display = 'none';
+                    }, 500);
+                }
+            }, 2000); // Show loading for 2 seconds to demonstrate AI initialization
+        });
+
+        // Add error handling
+        window.addEventListener('error', (e) => {
+            console.error('AI Dashboard Error:', e);
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen && !loadingScreen.classList.contains('hidden')) {
+                loadingScreen.innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
+                        <h1 style="margin: 0 0 0.5rem 0; font-size: 1.8rem;">AI System Loading</h1>
+                        <p style="margin: 0; opacity: 0.9;">Initializing backup systems...</p>
+                    </div>
+                `;
+            }
+        });
+
+        // Service Worker registration for future offline capabilities
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Register service worker when available
+                console.log('AI Dashboard: Service Worker support detected');
+            });
+        }
+
+        // Analytics and performance monitoring
+        window.aiDashboardMetrics = {
+            loadStart: performance.now(),
+            features: {
+                workoutGeneration: 0,
+                exerciseSubstitution: 0,
+                injuryAssessment: 0,
+                aiAnalytics: 0
+            },
+            trackFeatureUsage: function(feature) {
+                this.features[feature] = (this.features[feature] || 0) + 1;
+                console.log(`AI Feature Usage: ${feature} - ${this.features[feature]} times`);
+            }
+        };
+    </script>
+</body>
+</html>
