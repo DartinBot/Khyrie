@@ -1,15 +1,16 @@
 {
-  "name": "Khyrie Fitness Platform",
-  "short_name": "Khyrie", 
-  "description": "AI-Powered Family Fitness Platform with Premium Features",
+  "name": "Khyrie: AI Fitness & Family Workouts",
+  "short_name": "Khyrie",
+  "description": "AI-powered fitness platform with family accountability, personal trainers, form analysis, and advanced workout tracking",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#1a1a2e",
-  "theme_color": "#16213e",
+  "display_override": ["window-controls-overlay", "standalone"],
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
   "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "en-US",
-  "categories": ["health", "fitness", "lifestyle", "productivity"],
+  "lang": "en",
+  "categories": ["health", "fitness", "lifestyle", "sports", "wellness"],
   "screenshots": [
     {
       "src": "/screenshots/mobile-home.png",
@@ -26,43 +27,99 @@
   ],
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
+      "src": "icons/khyrie-16.png",
+      "sizes": "16x16",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-32.png",
+      "sizes": "32x32",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-36.png",
+      "sizes": "36x36",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-57.png",
+      "sizes": "57x57",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-60.png",
+      "sizes": "60x60",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-72.png",
       "sizes": "72x72",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-96x96.png",
-      "sizes": "96x96", 
+      "src": "icons/khyrie-76.png",
+      "sizes": "76x76",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-128x128.png",
+      "src": "icons/khyrie-96.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-114.png",
+      "sizes": "114x114",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-120.png",
+      "sizes": "120x120",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-128.png",
       "sizes": "128x128",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-144x144.png",
+      "src": "icons/khyrie-144.png",
       "sizes": "144x144",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-152x152.png",
+      "src": "icons/khyrie-152.png",
       "sizes": "152x152",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "icons/khyrie-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/khyrie-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-384x384.png",
+      "src": "icons/khyrie-384.png",
       "sizes": "384x384",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "icons/khyrie-512.png",
       "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/khyrie-1024.png",
+      "sizes": "1024x1024",
       "type": "image/png"
     }
   ],
@@ -96,6 +153,38 @@
         "src": "/icons/family-shortcut.png", 
         "sizes": "96x96" 
       }]
+    },
+    {
+      "name": "Camera Workout",
+      "short_name": "Camera",
+      "description": "Record workout with AI form analysis",
+      "url": "/?camera=true",
+      "icons": [{ 
+        "src": "/icons/camera-shortcut.png", 
+        "sizes": "96x96" 
+      }]
+    },
+    {
+      "name": "Find Trainer", 
+      "short_name": "Trainer",
+      "description": "Book a personal trainer session",
+      "url": "/trainers",
+      "icons": [{ 
+        "src": "/icons/trainer-shortcut.png", 
+        "sizes": "96x96" 
+      }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "handle_links": "preferred",
+  "protocol_handlers": [
+    {
+      "protocol": "khyrie",
+      "url": "/?workout=%s"
     }
   ]
 }

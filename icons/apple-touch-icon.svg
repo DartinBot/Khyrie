@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="180" height="180" viewBox="0 0 180 180" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4F46E5;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#7C3AED;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background with rounded corners for modern look -->
+  <rect x="0" y="0" width="180" height="180" rx="22" fill="url(#grad1)"/>
+  
+  <!-- Dumbbell icon -->
+  <g transform="translate(90,90)">
+    <!-- Left weight -->
+    <rect x="-60" y="-22" width="30" height="45" rx="5" fill="white"/>
+    <!-- Right weight -->
+    <rect x="30" y="-22" width="30" height="45" rx="5" fill="white"/>
+    <!-- Bar -->
+    <rect x="-45" y="-5" width="90" height="11" fill="white"/>
+    
+    <!-- Khyrie "K" -->
+    <text x="0" y="36" text-anchor="middle" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="white">K</text>
+  </g>
+</svg>
