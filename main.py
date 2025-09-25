@@ -114,6 +114,16 @@ social_tools = SocialTools()
 ai_tools = AILangChainTools()
 family_tools = FamilyFriendsTools()
 
+# Include subscription routes
+try:
+    from subscription_routes import router as subscription_router
+    app.include_router(subscription_router)
+    logger.info("Subscription routes loaded successfully")
+except ImportError as e:
+    logger.warning(f"Subscription routes not available: {e}")
+except Exception as e:
+    logger.error(f"Error loading subscription routes: {e}")
+
 @app.get("/")
 async def root():
     """Root endpoint with API information."""
@@ -585,6 +595,12 @@ async def get_group_activity_feed(group_id: str, limit: int = 20):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+# Subscription page endpoint
+@app.get("/subscription")
+async def subscription_page():
+    """Serve subscription pricing page."""
+    return FileResponse("subscription.html")
 
 # Health check endpoint
 @app.get("/health")

@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Subscription Plans - Khyrie Fitness</title>
+    
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#16213e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+    
+    <!-- Stripe.js -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .plans-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .plan-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .plan-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .plan-card.popular {
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+
+        .plan-card.popular::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.5rem 2rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .plan-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .plan-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .plan-price {
+            display: flex;
+            align-items: baseline;
+            justify-content: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .price-amount {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #667eea;
+        }
+
+        .price-period {
+            font-size: 1rem;
+            color: #666;
+            margin-left: 0.5rem;
+        }
+
+        .plan-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 1rem;
+        }
+
+        .trial-badge {
+            background: #e8f4f8;
+            color: #2196f3;
+            padding: 0.3rem 1rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .features-list {
+            list-style: none;
+            margin: 2rem 0;
+        }
+
+        .features-list li {
+            padding: 0.75rem 0;
+            display: flex;
+            align-items: flex-start;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .features-list li:last-child {
+            border-bottom: none;
+        }
+
+        .feature-check {
+            color: #4caf50;
+            margin-right: 0.75rem;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .feature-text {
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .limitations {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .limitations h4 {
+            color: #666;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 1px;
+        }
+
+        .limitations ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .limitations li {
+            padding: 0.2rem 0;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 1rem 2rem;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .subscribe-btn:hover {
+            background: linear-gradient(45deg, #5a6fd8, #6a3f8a);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+
+        .subscribe-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .current-plan {
+            background: #4caf50;
+            color: white;
+        }
+
+        .current-plan:hover {
+            background: #45a049;
+        }
+
+        .free-plan {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+        }
+
+        .savings-badge {
+            background: #ff9800;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .comparison-table {
+            margin-top: 4rem;
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+
+        .faq-section {
+            margin-top: 4rem;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 2rem;
+        }
+
+        .faq-section h2 {
+            color: white;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .faq-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            color: white;
+        }
+
+        .faq-question {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .faq-answer {
+            opacity: 0.9;
+            line-height: 1.6;
+        }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .plans-container {
+                grid-template-columns: 1fr;
+            }
+
+            .plan-card.popular {
+                transform: none;
+            }
+
+            .plan-card.popular:hover {
+                transform: translateY(-10px);
+            }
+        }
+
+        /* Loading State */
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Choose Your Fitness Journey</h1>
+            <p>Unlock the power of AI-driven fitness coaching. Transform your health with personalized workouts, expert guidance, and advanced analytics.</p>
+        </header>
+
+        <div class="plans-container" id="plansContainer">
+            <!-- Plans will be loaded dynamically -->
+        </div>
+
+        <div class="faq-section">
+            <h2>Frequently Asked Questions</h2>
+            
+            <div class="faq-item">
+                <div class="faq-question">What's included in the 7-day free trial?</div>
+                <div class="faq-answer">Full access to all premium features of your chosen plan, including AI workout generation, advanced analytics, and priority support. Cancel anytime during the trial period at no charge.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Can I change or cancel my subscription?</div>
+                <div class="faq-answer">Yes! You can upgrade, downgrade, or cancel your subscription at any time. Changes take effect at the next billing cycle, and you'll retain access until your current period ends.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">How does AI workout generation work?</div>
+                <div class="faq-answer">Our AI analyzes your fitness level, goals, available time, and equipment to create personalized workouts. It learns from your feedback and adapts to ensure optimal results and progression.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">Is family sharing really unlimited?</div>
+                <div class="faq-answer">Pro and Elite plans include unlimited family members. Each family member gets their own personalized experience while sharing progress and motivation within your family group.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-question">What devices are supported?</div>
+                <div class="faq-answer">Khyrie works on all modern devices - smartphones, tablets, laptops, and desktops. Our Progressive Web App provides a native app experience on mobile devices.</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Stripe
+        const stripe = Stripe('pk_test_your_publishable_key_here'); // Replace with your publishable key
+        
+        let currentUserId = null;
+        let isLoading = false;
+
+        // Load subscription plans on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            await loadSubscriptionPlans();
+            await checkCurrentSubscription();
+        });
+
+        async function loadSubscriptionPlans() {
+            try {
+                const response = await fetch('/api/subscriptions/plans');
+                const data = await response.json();
+                
+                renderPlans(data.plans, data.free_tier);
+            } catch (error) {
+                console.error('Error loading subscription plans:', error);
+                showError('Failed to load subscription plans. Please refresh the page.');
+            }
+        }
+
+        async function checkCurrentSubscription() {
+            try {
+                // Check if user is logged in and get current subscription
+                const token = localStorage.getItem('auth_token');
+                if (!token) return;
+
+                const response = await fetch('/api/subscriptions/status', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    updateUIForCurrentSubscription(data.subscription);
+                }
+            } catch (error) {
+                console.log('User not logged in or no subscription');
+            }
+        }
+
+        function renderPlans(plans, freeTier) {
+            const container = document.getElementById('plansContainer');
+            
+            // Add free tier first
+            const freeCard = createPlanCard(freeTier, true);
+            container.appendChild(freeCard);
+            
+            // Add paid plans
+            plans.forEach(plan => {
+                const planCard = createPlanCard(plan, false);
+                container.appendChild(planCard);
+            });
+        }
+
+        function createPlanCard(plan, isFree) {
+            const card = document.createElement('div');
+            card.className = `plan-card ${plan.most_popular ? 'popular' : ''} ${isFree ? 'free-plan' : ''}`;
+            
+            const limitationsHtml = plan.limitations ? `
+                <div class="limitations">
+                    <h4>Usage Limits</h4>
+                    <ul>
+                        ${Object.entries(plan.limitations).map(([key, value]) => 
+                            `<li>${formatLimitationKey(key)}: ${value === -1 ? 'Unlimited' : value}</li>`
+                        ).join('')}
+                    </ul>
+                </div>
+            ` : '';
+
+            const savingsHtml = plan.savings_vs_personal_trainer ? `
+                <div class="savings-badge">
+                    Save ${plan.savings_vs_personal_trainer} vs. personal trainer
+                </div>
+            ` : '';
+
+            const trialHtml = plan.trial_days && !isFree ? `
+                <div class="trial-badge">${plan.trial_days}-day free trial</div>
+            ` : '';
+
+            card.innerHTML = `
+                <div class="plan-header">
+                    <h3 class="plan-name">${plan.name}</h3>
+                    <div class="plan-price">
+                        <span class="price-amount">$${plan.price}</span>
+                        <span class="price-period">${isFree ? '' : '/month'}</span>
+                    </div>
+                    <p class="plan-description">${plan.description || ''}</p>
+                    ${trialHtml}
+                </div>
+                
+                <ul class="features-list">
+                    ${plan.features.map(feature => `
+                        <li>
+                            <span class="feature-check">✓</span>
+                            <span class="feature-text">${feature}</span>
+                        </li>
+                    `).join('')}
+                </ul>
+                
+                ${limitationsHtml}
+                
+                <button class="subscribe-btn" onclick="handleSubscription('${plan.id || 'free'}', '${plan.name}')">
+                    ${isFree ? 'Current Plan' : `Get Started - $${plan.price}/mo`}
+                </button>
+                
+                ${savingsHtml}
+            `;
+            
+            return card;
+        }
+
+        async function handleSubscription(planId, planName) {
+            if (isLoading) return;
+            
+            if (planId === 'free') {
+                showMessage('You are currently on the free plan. Choose a paid plan above to unlock premium features.');
+                return;
+            }
+
+            // Check if user is logged in
+            const token = localStorage.getItem('auth_token');
+            if (!token) {
+                // Redirect to login/signup
+                window.location.href = '/auth/login?redirect=subscription';
+                return;
+            }
+
+            setLoadingState(true);
+
+            try {
+                // Create payment method using Stripe
+                const { error, paymentMethod } = await stripe.createPaymentMethod({
+                    type: 'card',
+                    card: {
+                        // This would typically be a Stripe Elements card input
+                        // For now, we'll use test data
+                        number: '4242424242424242',
+                        exp_month: 12,
+                        exp_year: 2025,
+                        cvc: '123'
+                    }
+                });
+
+                if (error) {
+                    throw new Error(error.message);
+                }
+
+                // Create subscription
+                const response = await fetch('/api/subscriptions/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        plan_type: planId,
+                        payment_method_id: paymentMethod.id,
+                        user_email: getUserEmail() // You'll need to implement this
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showSuccess(`Successfully subscribed to ${planName}! Your 7-day free trial has started.`);
+                    setTimeout(() => {
+                        window.location.href = '/dashboard?welcome=subscription';
+                    }, 2000);
+                } else {
+                    throw new Error(result.detail || 'Subscription failed');
+                }
+
+            } catch (error) {
+                console.error('Subscription error:', error);
+                showError(`Subscription failed: ${error.message}`);
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        function updateUIForCurrentSubscription(subscription) {
+            const buttons = document.querySelectorAll('.subscribe-btn');
+            buttons.forEach(button => {
+                const planId = button.onclick.toString().match(/'([^']+)'/)?.[1];
+                if (planId === subscription.plan_type) {
+                    button.textContent = 'Current Plan';
+                    button.className = 'subscribe-btn current-plan';
+                    button.disabled = true;
+                }
+            });
+        }
+
+        function formatLimitationKey(key) {
+            return key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function setLoadingState(loading) {
+            isLoading = loading;
+            const container = document.getElementById('plansContainer');
+            container.classList.toggle('loading', loading);
+        }
+
+        function showError(message) {
+            // Implement your error display logic
+            alert(`Error: ${message}`);
+        }
+
+        function showSuccess(message) {
+            // Implement your success display logic
+            alert(`Success: ${message}`);
+        }
+
+        function showMessage(message) {
+            // Implement your info message display logic
+            alert(message);
+        }
+
+        function getUserEmail() {
+            // Implement logic to get user email from JWT or user profile
+            return 'user@example.com'; // Placeholder
+        }
+
+        // Service Worker Registration for PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(registration => {
+                        console.log('SW registered: ', registration);
+                    })
+                    .catch(registrationError => {
+                        console.log('SW registration failed: ', registrationError);
+                    });
+            });
+        }
+    </script>
+</body>
+</html>
