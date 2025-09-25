@@ -1,0 +1,45 @@
+Khyrie Fitness Platform
+Copyright (C) 2025 Darnell Roy
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+---
+
+This product includes software developed by:
+- Darnell Roy and the Khyrie project contributors
+
+Third-party components:
+- FastAPI (Apache 2.0 License)
+- NumPy (BSD License)
+- Model Context Protocol components (License varies)
+
+The Khyrie name and logo are trademarks of Darnell Roy.
+
+---
+
+COMMERCIAL USE NOTICE:
+
+While the core Khyrie fitness platform is open source under Apache 2.0,
+certain advanced AI algorithms and premium features may require a separate
+commercial license for commercial use. 
+
+For commercial licensing inquiries, please contact: licensing@khyrie.com
+
+Premium features requiring commercial license:
+- Advanced AI workout generation algorithms
+- Predictive injury risk assessment
+- Enterprise-grade analytics and reporting
+- Multi-tenant SaaS deployment configurations
+- Priority support and professional services
+
+Educational and personal use of all features is permitted under this license.
