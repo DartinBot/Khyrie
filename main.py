@@ -18,7 +18,10 @@ limitations under the License.
 
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse, Response
+from fastapi.staticfiles import StaticFiles
+import os
+from pathlib import Path
 
 # Import local tools and modules
 from fitness_tools import (
@@ -37,14 +40,20 @@ app = FastAPI(
     version="1.0.0"
 )
 
-# Configure CORS for React frontend
+# Configure CORS for React frontend and mobile PWA
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # React dev server
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://localhost:8000",  # FastAPI server
+        "https://khyrie.com",     # Production domain
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
 
 # Initialize MCP tool classes
 exercise_tools = ExerciseTools()
@@ -79,6 +88,39 @@ async def root():
             "ai_recommendations"
         ]
     }
+
+# Mount static files for PWA assets
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+if os.path.exists("icons"):
+    app.mount("/icons", StaticFiles(directory="icons"), name="icons")
+
+# PWA Routes for Mobile App
+@app.get("/mobile")
+async def mobile_app():
+    """Serve mobile PWA landing page."""
+    return FileResponse("mobile.html", media_type="text/html")
+
+@app.get("/manifest.json")
+async def pwa_manifest():
+    """Serve PWA manifest with proper headers."""
+    return FileResponse(
+        "manifest.json", 
+        media_type="application/manifest+json",
+        headers={"Cache-Control": "no-cache"}
+    )
+
+@app.get("/sw.js")
+async def service_worker():
+    """Serve service worker with proper MIME type."""
+    return FileResponse(
+        "sw.js",
+        media_type="application/javascript",
+        headers={
+            "Cache-Control": "no-cache",
+            "Service-Worker-Allowed": "/"
+        }
+    )
 
 # Exercise & Workout Routes
 @app.get("/api/exercises")
