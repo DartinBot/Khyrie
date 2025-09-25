@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workout Session - Khyrie Fitness</title>
+    <link rel="stylesheet" href="WorkoutSession.css">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="icon" href="/icons/icon-192x192.png">
+    <meta name="theme-color" content="#16213e">
+</head>
+<body>
+    <div id="workout-container">
+        <!-- Header -->
+        <header class="workout-header">
+            <div class="header-content">
+                <button class="back-btn" onclick="history.back()">
+                    <span class="back-icon">←</span>
+                </button>
+                <div class="workout-title">
+                    <h1 id="workout-name">Upper Body Strength</h1>
+                    <div class="workout-timer" id="session-timer">00:00</div>
+                </div>
+                <button class="menu-btn" onclick="toggleWorkoutMenu()">
+                    <span class="menu-icon">⋮</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Workout Progress Bar -->
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="workout-progress"></div>
+            </div>
+            <div class="progress-text">
+                <span id="current-exercise">1</span> of <span id="total-exercises">6</span> exercises
+            </div>
+        </div>
+
+        <!-- Current Exercise Card -->
+        <div class="current-exercise-card">
+            <div class="exercise-header">
+                <div class="exercise-info">
+                    <h2 id="exercise-name">Bench Press</h2>
+                    <div class="exercise-meta">
+                        <span class="target-muscles" id="target-muscles">🎯 Chest, Triceps, Shoulders</span>
+                        <span class="exercise-type" id="exercise-type">💪 Compound</span>
+                    </div>
+                </div>
+                <button class="exercise-help" onclick="showExerciseGuide()">
+                    <span>❓</span>
+                </button>
+            </div>
+
+            <!-- Exercise Animation/Image -->
+            <div class="exercise-visual">
+                <div class="exercise-animation" id="exercise-animation">
+                    <img src="/icons/bench-press.gif" alt="Bench Press" id="exercise-gif" onerror="this.style.display='none'">
+                    <div class="exercise-placeholder" id="exercise-placeholder">
+                        🏋️‍♂️
+                        <span>Bench Press</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sets Tracking -->
+            <div class="sets-container">
+                <div class="sets-header">
+                    <h3>Sets & Reps</h3>
+                    <div class="previous-record">
+                        <span>Last: 185 lbs × 8 reps</span>
+                    </div>
+                </div>
+
+                <div class="sets-grid" id="sets-grid">
+                    <!-- Sets will be generated dynamically -->
+                </div>
+
+                <div class="set-input-section" id="set-input-section">
+                    <div class="set-number">
+                        <span>Set <span id="current-set">1</span></span>
+                    </div>
+                    
+                    <div class="input-row">
+                        <div class="input-group">
+                            <label>Weight (lbs)</label>
+                            <input type="number" id="weight-input" placeholder="185" min="0" step="2.5">
+                        </div>
+                        <div class="input-group">
+                            <label>Reps</label>
+                            <input type="number" id="reps-input" placeholder="8" min="0" max="100">
+                        </div>
+                    </div>
+
+                    <div class="difficulty-selector">
+                        <span>Difficulty:</span>
+                        <div class="difficulty-buttons">
+                            <button class="difficulty-btn" data-difficulty="easy">😌 Easy</button>
+                            <button class="difficulty-btn active" data-difficulty="moderate">😤 Good</button>
+                            <button class="difficulty-btn" data-difficulty="hard">🔥 Hard</button>
+                        </div>
+                    </div>
+
+                    <button class="add-set-btn" onclick="addSet()">
+                        ✅ Complete Set
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rest Timer -->
+        <div class="rest-timer-card" id="rest-timer-card" style="display: none;">
+            <div class="timer-content">
+                <div class="timer-circle">
+                    <div class="timer-text">
+                        <span class="timer-time" id="rest-time">02:00</span>
+                        <span class="timer-label">Rest</span>
+                    </div>
+                    <svg class="timer-svg" viewBox="0 0 100 100">
+                        <circle class="timer-track" cx="50" cy="50" r="45"></circle>
+                        <circle class="timer-progress" cx="50" cy="50" r="45" id="timer-progress-circle"></circle>
+                    </svg>
+                </div>
+
+                <div class="timer-controls">
+                    <button class="timer-btn" onclick="pauseRestTimer()">⏸️ Pause</button>
+                    <button class="timer-btn" onclick="skipRest()">⏭️ Skip</button>
+                    <button class="timer-btn" onclick="addRestTime(30)">+30s</button>
+                </div>
+
+                <div class="next-set-preview">
+                    <span>Next: Set <span id="next-set-number">2</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Exercise Navigation -->
+        <div class="exercise-navigation">
+            <button class="nav-btn secondary" onclick="previousExercise()" id="prev-btn" disabled>
+                ← Previous
+            </button>
+            <button class="nav-btn primary" onclick="nextExercise()" id="next-btn">
+                Next Exercise →
+            </button>
+        </div>
+
+        <!-- Floating Action Button -->
+        <div class="fab-container">
+            <button class="fab" onclick="toggleFabMenu()" id="main-fab">
+                <span class="fab-icon">+</span>
+            </button>
+            
+            <div class="fab-menu" id="fab-menu">
+                <button class="fab-item" onclick="takeNote()">
+                    <span class="fab-icon">📝</span>
+                    <span class="fab-label">Note</span>
+                </button>
+                <button class="fab-item" onclick="recordForm()">
+                    <span class="fab-icon">📹</span>
+                    <span class="fab-label">Record</span>
+                </button>
+                <button class="fab-item" onclick="shareSet()">
+                    <span class="fab-icon">📱</span>
+                    <span class="fab-label">Share</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <button class="quick-action" onclick="adjustWeight(-5)">
+                <span class="action-icon">⬇️</span>
+                <span class="action-label">-5 lbs</span>
+            </button>
+            <button class="quick-action" onclick="adjustWeight(5)">
+                <span class="action-icon">⬆️</span>
+                <span class="action-label">+5 lbs</span>
+            </button>
+            <button class="quick-action" onclick="repeatLastSet()">
+                <span class="action-icon">🔄</span>
+                <span class="action-label">Repeat</span>
+            </button>
+            <button class="quick-action" onclick="toggleMetronome()">
+                <span class="action-icon">🎵</span>
+                <span class="action-label">Tempo</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Workout Complete Modal -->
+    <div class="modal" id="complete-modal">
+        <div class="modal-content">
+            <h2>🎉 Workout Complete!</h2>
+            <div class="workout-summary">
+                <div class="summary-item">
+                    <span class="summary-label">Duration:</span>
+                    <span class="summary-value" id="total-duration">45:32</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Exercises:</span>
+                    <span class="summary-value" id="exercises-completed">6 of 6</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Total Volume:</span>
+                    <span class="summary-value" id="total-volume">12,450 lbs</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Personal Records:</span>
+                    <span class="summary-value pr-count" id="pr-count">2 PRs! 🔥</span>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="btn btn-primary" onclick="saveWorkout()">
+                    💾 Save Workout
+                </button>
+                <button class="btn btn-secondary" onclick="shareWorkout()">
+                    📱 Share Results
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exercise Guide Modal -->
+    <div class="modal" id="guide-modal">
+        <div class="modal-content guide-content">
+            <div class="modal-header">
+                <h3 id="guide-exercise-name">Bench Press</h3>
+                <button class="close-btn" onclick="closeExerciseGuide()">×</button>
+            </div>
+            <div class="guide-body">
+                <div class="guide-video">
+                    <video controls poster="/images/bench-press-thumb.jpg">
+                        <source src="/videos/bench-press-guide.mp4" type="video/mp4">
+                    </video>
+                </div>
+                <div class="guide-instructions">
+                    <h4>Proper Form:</h4>
+                    <ul id="exercise-instructions">
+                        <li>Lie flat on bench with feet firmly planted</li>
+                        <li>Grip bar slightly wider than shoulder width</li>
+                        <li>Lower bar to chest with control</li>
+                        <li>Press up explosively, keeping core tight</li>
+                    </ul>
+                </div>
+                <div class="guide-tips">
+                    <h4>💡 Pro Tips:</h4>
+                    <ul id="exercise-tips">
+                        <li>Keep shoulder blades retracted</li>
+                        <li>Don't bounce the bar off your chest</li>
+                        <li>Breathe out during the pressing motion</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="WorkoutSession.js"></script>
+</body>
+</html>

@@ -1,0 +1,764 @@
+/* Social Fitness Component Styles */
+.social-fitness {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.social-header {
+  text-align: center;
+  color: white;
+  margin-bottom: 30px;
+}
+
+.social-header h1 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 10px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.social-header p {
+  font-size: 1.2rem;
+  opacity: 0.9;
+}
+
+/* Navigation Tabs */
+.social-nav {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 30px;
+  overflow-x: auto;
+  padding-bottom: 10px;
+}
+
+.tab-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(255,255,255,0.2);
+  color: white;
+  border: 2px solid transparent;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: fit-content;
+}
+
+.tab-button:hover {
+  background: rgba(255,255,255,0.3);
+  transform: translateY(-2px);
+}
+
+.tab-button.active {
+  background: white;
+  color: #667eea;
+  border-color: white;
+}
+
+.tab-icon {
+  font-size: 1.2rem;
+}
+
+.tab-label {
+  font-weight: 600;
+}
+
+/* Content Area */
+.social-content {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  min-height: 600px;
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.section-header h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0;
+}
+
+.create-challenge-btn,
+.add-friends-btn {
+  background: #48cae4;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.create-challenge-btn:hover,
+.add-friends-btn:hover {
+  background: #0096c7;
+  transform: translateY(-2px);
+}
+
+/* Activity Feed */
+.create-post {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 25px;
+  border: 1px solid #e9ecef;
+}
+
+.create-post h3 {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.create-post textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  margin-bottom: 15px;
+}
+
+.create-post textarea:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.post-actions {
+  display: flex;
+  gap: 15px;
+  justify-content: flex-end;
+}
+
+.attach-btn,
+.post-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.attach-btn {
+  background: white;
+  border: 2px solid #e9ecef;
+  color: #666;
+}
+
+.post-btn {
+  background: #667eea;
+  border: none;
+  color: white;
+}
+
+.attach-btn:hover {
+  border-color: #667eea;
+  color: #667eea;
+}
+
+.post-btn:hover {
+  background: #5a67d8;
+}
+
+/* Feed Items */
+.feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.feed-item {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feed-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.feed-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  background: #f8f9fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+}
+
+.user-details h4 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.user-level {
+  font-size: 0.8rem;
+  color: #666;
+  background: #e9ecef;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.post-time {
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.feed-content p {
+  margin: 0 0 10px 0;
+  color: #333;
+  line-height: 1.5;
+}
+
+.activity-details {
+  background: #f8f9fa;
+  padding: 10px 15px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  font-family: 'Monaco', 'Consolas', monospace;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.achievements {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.achievement-badge {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  padding: 4px 10px;
+  border-radius: 15px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.feed-actions {
+  display: flex;
+  gap: 15px;
+  padding-top: 15px;
+  border-top: 1px solid #e9ecef;
+}
+
+.action-btn {
+  background: none;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.action-btn:hover {
+  background: #f8f9fa;
+  color: #333;
+}
+
+.like-btn:hover { color: #ff6b6b; }
+.comment-btn:hover { color: #48cae4; }
+.share-btn:hover { color: #667eea; }
+
+/* Challenges */
+.challenges-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.challenge-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.challenge-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.challenge-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.challenge-header h3 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.days-left {
+  background: #ff6b6b;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.challenge-description {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.challenge-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-item label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 5px;
+}
+
+.stat-item span {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.progress-section {
+  margin-bottom: 20px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #e9ecef;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+}
+
+.progress-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.challenge-reward {
+  background: #fff3cd;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  text-align: center;
+  font-weight: 500;
+  color: #856404;
+}
+
+.join-challenge-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.join-challenge-btn:hover {
+  background: linear-gradient(135deg, #5a67d8, #6b46c1);
+  transform: translateY(-2px);
+}
+
+/* Friends */
+.friends-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.friend-card {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.friend-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.friend-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 15px;
+  position: relative;
+}
+
+.friend-avatar {
+  width: 50px;
+  height: 50px;
+  background: #f8f9fa;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.friend-info h4 {
+  margin: 0;
+  font-weight: 600;
+  color: #333;
+}
+
+.friend-level {
+  font-size: 0.8rem;
+  color: #666;
+  background: #e9ecef;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #ccc;
+  margin-left: auto;
+}
+
+.status-indicator.active {
+  background: #28a745;
+  box-shadow: 0 0 6px rgba(40, 167, 69, 0.5);
+}
+
+.friend-status {
+  margin-bottom: 15px;
+}
+
+.friend-status p {
+  margin: 0 0 5px 0;
+  color: #333;
+  font-weight: 500;
+}
+
+.last-active {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.friend-stats {
+  background: #f8f9fa;
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 15px;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat label {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.stat span {
+  font-weight: 700;
+  color: #333;
+}
+
+.common-goals {
+  margin-bottom: 20px;
+}
+
+.common-goals label {
+  display: block;
+  font-size: 0.9rem;
+  color: #666;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+.goal-tags {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.goal-tag {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 3px 8px;
+  border-radius: 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.friend-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.friend-action-btn {
+  padding: 8px 12px;
+  border: 1px solid #e9ecef;
+  background: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.friend-action-btn:hover {
+  background: #f8f9fa;
+  border-color: #667eea;
+  color: #667eea;
+}
+
+/* Leaderboard */
+.leaderboard-filter {
+  padding: 8px 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  font-weight: 500;
+}
+
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.leaderboard-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 15px 20px;
+  transition: all 0.3s ease;
+}
+
+.leaderboard-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+}
+
+.leaderboard-item.current-user {
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  border-color: #ff9800;
+}
+
+.rank-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.rank-number {
+  font-weight: 700;
+  color: #333;
+  font-size: 1.1rem;
+}
+
+.rank-icon {
+  font-size: 1.3rem;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #333;
+}
+
+.points-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: right;
+}
+
+.points {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #667eea;
+}
+
+.points-label {
+  font-size: 0.8rem;
+  color: #666;
+}
+
+.leaderboard-info {
+  background: #e8f4f8;
+  padding: 15px;
+  border-radius: 8px;
+  text-align: center;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Loading States */
+.loading-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #666;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e9ecef;
+  border-left: 3px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .social-fitness {
+    padding: 15px;
+  }
+  
+  .social-header h1 {
+    font-size: 2rem;
+  }
+  
+  .social-nav {
+    flex-direction: column;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    gap: 15px;
+    text-align: center;
+  }
+  
+  .challenges-grid,
+  .friends-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .post-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .feed-actions {
+    justify-content: space-around;
+  }
+  
+  .challenge-stats {
+    grid-template-columns: 1fr;
+  }
+  
+  .friend-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .social-content {
+    padding: 20px 15px;
+  }
+  
+  .user-info {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .leaderboard-item {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .rank-badge {
+    justify-content: center;
+  }
+}

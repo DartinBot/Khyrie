@@ -1,8 +1,9 @@
-// Khyrie PWA Service Worker
+// Enhanced Khyrie PWA Service Worker with Premium Features
 // Copyright (C) 2025 Darnell Roy
 
-const CACHE_NAME = 'khyrie-fitness-v1';
-const API_CACHE_NAME = 'khyrie-api-v1';
+const CACHE_NAME = 'khyrie-fitness-v2';
+const API_CACHE_NAME = 'khyrie-api-v2';
+const PREMIUM_CACHE_NAME = 'khyrie-premium-v2';
 
 // Static files to cache for offline use
 const urlsToCache = [

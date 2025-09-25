@@ -12,7 +12,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
 from fastapi import HTTPException
-from sqlalchemy import create_engine, Column, Integer, String, Decimal, DateTime, Boolean
+from sqlalchemy import create_engine, Column, Integer, String, DateTime, Boolean, Numeric
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -45,7 +45,7 @@ class PaymentHistory(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, nullable=False, index=True)
     subscription_id = Column(Integer, nullable=True)
-    amount = Column(Decimal(10, 2), nullable=False)
+    amount = Column(Numeric(10, 2), nullable=False)
     currency = Column(String(3), default='USD')
     stripe_payment_id = Column(String(255), unique=True)
     status = Column(String(20))  # 'succeeded', 'failed', 'pending'

@@ -1,15 +1,15 @@
 {
-  "name": "Khyrie - AI Fitness Platform",
-  "short_name": "Khyrie",
-  "description": "AI-Powered Family Fitness Platform by Darnell Roy",
+  "name": "Khyrie Fitness Platform",
+  "short_name": "Khyrie", 
+  "description": "AI-Powered Family Fitness Platform with Premium Features",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0f172a",
-  "theme_color": "#1e40af",
-  "orientation": "portrait",
+  "background_color": "#1a1a2e",
+  "theme_color": "#16213e",
+  "orientation": "portrait-primary",
   "scope": "/",
-  "lang": "en",
-  "categories": ["health", "fitness", "lifestyle"],
+  "lang": "en-US",
+  "categories": ["health", "fitness", "lifestyle", "productivity"],
   "screenshots": [
     {
       "src": "/screenshots/mobile-home.png",

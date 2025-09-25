@@ -434,3 +434,340 @@ def get_risk_level(score: int) -> str:
         return "High"
     else:
         return "Very High"
+
+# Missing helper functions implementation
+
+async def get_user_health_metrics(user_id: int, db_session) -> Dict[str, Any]:
+    """Get comprehensive health metrics for a user."""
+    # In a real implementation, this would query your database
+    return {
+        "heart_rate_variability": 42,
+        "resting_heart_rate": 65,
+        "sleep_quality": 7.5,
+        "stress_markers": {"cortisol_level": "normal", "recovery_score": 78},
+        "body_composition": {"body_fat": 15.2, "muscle_mass": 165},
+        "recent_vitals": {
+            "blood_pressure": "120/80",
+            "weight": 70.5,
+            "last_updated": datetime.utcnow().isoformat()
+        }
+    }
+
+async def get_recent_workout_history(user_id: int, days: int = 14, db_session=None) -> List[Dict[str, Any]]:
+    """Get recent workout history for analysis."""
+    # Mock data - replace with actual database queries
+    return [
+        {
+            "date": (datetime.utcnow() - timedelta(days=i)).isoformat(),
+            "duration": 45 + (i % 15),
+            "intensity": "moderate" if i % 2 else "high",
+            "exercises": ["squats", "deadlifts", "bench_press"],
+            "form_quality": 8.5 - (i * 0.1),
+            "completion_rate": 95 - (i % 10),
+            "recovery_time": 24 + (i % 12)
+        }
+        for i in range(min(days, 14))
+    ]
+
+def assess_form_consistency(workout_history: List[Dict]) -> Dict[str, Any]:
+    """Assess form quality consistency over time."""
+    if not workout_history:
+        return {"score": 0, "trend": "insufficient_data"}
+    
+    form_scores = [w.get("form_quality", 5) for w in workout_history]
+    avg_score = sum(form_scores) / len(form_scores)
+    
+    # Calculate trend
+    if len(form_scores) > 3:
+        recent_avg = sum(form_scores[:3]) / 3
+        older_avg = sum(form_scores[3:]) / len(form_scores[3:])
+        trend = "improving" if recent_avg > older_avg else "declining"
+    else:
+        trend = "stable"
+    
+    return {
+        "score": avg_score,
+        "trend": trend,
+        "consistency": "high" if min(form_scores) > 7 else "variable",
+        "recommendations": "Focus on form over intensity" if avg_score < 7 else "Maintain current form standards"
+    }
+
+def calculate_stress_impact(stress_level: int, sleep_quality: int) -> Dict[str, Any]:
+    """Calculate how stress and sleep affect injury risk."""
+    stress_impact = max(0, (stress_level - 5) * 2)  # Scale 1-10 to impact score
+    sleep_impact = max(0, (7 - sleep_quality) * 3)  # Poor sleep increases risk
+    
+    combined_impact = min(20, stress_impact + sleep_impact)
+    
+    return {
+        "score": combined_impact,
+        "stress_contribution": stress_impact,
+        "sleep_contribution": sleep_impact,
+        "recommendations": [
+            "Consider stress management techniques" if stress_level > 6 else None,
+            "Prioritize sleep quality improvement" if sleep_quality < 6 else None
+        ]
+    }
+
+def assess_pain_risk(pain_areas: List[str], workout_history: List[Dict]) -> Dict[str, Any]:
+    """Assess pain and injury risk from reported pain areas."""
+    if not pain_areas:
+        return {"score": 0, "risk_areas": [], "recommendations": []}
+    
+    high_risk_areas = ["lower_back", "knee", "shoulder", "neck"]
+    risk_score = sum(10 for area in pain_areas if area in high_risk_areas)
+    risk_score += len(pain_areas) * 5  # Base risk for any pain
+    
+    return {
+        "score": min(50, risk_score),
+        "risk_areas": pain_areas,
+        "high_priority": [area for area in pain_areas if area in high_risk_areas],
+        "recommendations": [
+            f"Avoid exercises targeting {area}" for area in pain_areas if area in high_risk_areas
+        ]
+    }
+
+def generate_injury_prevention_recommendations(analysis_results: Dict) -> List[str]:
+    """Generate specific injury prevention recommendations."""
+    recommendations = []
+    
+    overall_risk = analysis_results.get("overall_risk", 0)
+    
+    if overall_risk > 60:
+        recommendations.extend([
+            "Consider taking 2-3 rest days before next workout",
+            "Focus on mobility and flexibility exercises",
+            "Reduce workout intensity by 20-30%"
+        ])
+    elif overall_risk > 40:
+        recommendations.extend([
+            "Include extra warm-up time (10+ minutes)",
+            "Monitor form quality closely",
+            "Consider lighter weights or resistance"
+        ])
+    else:
+        recommendations.extend([
+            "Maintain current workout routine",
+            "Continue monitoring recovery markers",
+            "Consider progressive overload opportunities"
+        ])
+    
+    # Add specific recommendations from analysis components
+    for component, data in analysis_results.get("risk_factors", {}).items():
+        if isinstance(data, dict) and "recommendations" in data:
+            if isinstance(data["recommendations"], list):
+                recommendations.extend(data["recommendations"])
+            elif data["recommendations"]:
+                recommendations.append(data["recommendations"])
+    
+    return list(filter(None, recommendations))
+
+def get_primary_risk_factors(analysis_results: Dict) -> List[Dict[str, Any]]:
+    """Get the top risk factors contributing to injury risk."""
+    risk_factors = analysis_results.get("risk_factors", {})
+    factors_with_scores = []
+    
+    for factor_name, factor_data in risk_factors.items():
+        if isinstance(factor_data, dict) and "score" in factor_data:
+            factors_with_scores.append({
+                "factor": factor_name,
+                "score": factor_data["score"],
+                "impact": "high" if factor_data["score"] > 30 else "moderate" if factor_data["score"] > 15 else "low"
+            })
+    
+    # Sort by score descending and return top 3
+    return sorted(factors_with_scores, key=lambda x: x["score"], reverse=True)[:3]
+
+def calculate_risk_trend(user_id: int, current_risk: int) -> Dict[str, Any]:
+    """Calculate injury risk trend over time."""
+    # Mock historical data - in real implementation, query database
+    historical_risks = [35, 28, 42, 38, current_risk]
+    
+    if len(historical_risks) < 2:
+        return {"trend": "insufficient_data", "change": 0}
+    
+    recent_avg = sum(historical_risks[-3:]) / min(3, len(historical_risks))
+    older_avg = sum(historical_risks[:-3]) / max(1, len(historical_risks) - 3) if len(historical_risks) > 3 else recent_avg
+    
+    change = recent_avg - older_avg
+    trend = "increasing" if change > 5 else "decreasing" if change < -5 else "stable"
+    
+    return {
+        "trend": trend,
+        "change": change,
+        "historical_average": sum(historical_risks) / len(historical_risks),
+        "recommendation": "Monitor closely" if trend == "increasing" else "Continue current approach"
+    }
+
+def check_emergency_indicators(analysis_results: Dict) -> Dict[str, Any]:
+    """Check for emergency indicators requiring immediate attention."""
+    emergency_indicators = []
+    warnings = []
+    
+    overall_risk = analysis_results.get("overall_risk", 0)
+    pain_areas = analysis_results.get("risk_factors", {}).get("pain_assessment", {}).get("risk_areas", [])
+    
+    # Check for emergency conditions
+    if overall_risk > 80:
+        emergency_indicators.append("Extremely high injury risk - immediate rest recommended")
+    
+    high_risk_pain = ["chest", "severe_back", "joint_swelling"]
+    if any(area in str(pain_areas) for area in high_risk_pain):
+        emergency_indicators.append("Concerning pain pattern detected - consider medical consultation")
+    
+    # Check for warning conditions
+    if overall_risk > 60:
+        warnings.append("High injury risk - reduce training intensity")
+    
+    return {
+        "has_emergency": len(emergency_indicators) > 0,
+        "emergency_indicators": emergency_indicators,
+        "warnings": warnings,
+        "immediate_actions": emergency_indicators + warnings
+    }
+
+async def save_injury_analysis(user_id: int, analysis_results: Dict, db_session):
+    """Save injury analysis results to database."""
+    # In real implementation, save to your database
+    logger.info(f"Saving injury analysis for user {user_id}: Risk level {analysis_results.get('risk_level', 'unknown')}")
+    # Mock save operation
+    pass
+
+async def get_comprehensive_user_profile(user_id: int, db_session) -> Dict[str, Any]:
+    """Get comprehensive user profile for AI coaching."""
+    return {
+        "fitness_level": "intermediate",
+        "goals": ["weight_loss", "strength"],
+        "preferences": {
+            "workout_time": "morning",
+            "intensity_preference": "moderate",
+            "exercise_types": ["strength_training", "cardio"]
+        },
+        "health_status": {
+            "injuries": ["previous_knee_issue"],
+            "limitations": ["limited_shoulder_mobility"],
+            "medications": []
+        },
+        "progress_tracking": {
+            "weight_trend": "decreasing",
+            "strength_trend": "increasing",
+            "consistency": "high"
+        },
+        "personal_info": {
+            "age": 32,
+            "activity_level": "moderately_active",
+            "experience_years": 2
+        }
+    }
+
+async def get_coach_conversation_history(user_id: int, db_session, limit: int = 10) -> List[Dict[str, Any]]:
+    """Get recent coach conversation history."""
+    # Mock conversation history - replace with database query
+    return [
+        {
+            "timestamp": (datetime.utcnow() - timedelta(hours=i)).isoformat(),
+            "user_message": f"Sample user message {i}",
+            "coach_response": f"Sample coach response {i}",
+            "context": "workout_planning" if i % 2 else "motivation"
+        }
+        for i in range(min(limit, 5))
+    ]
+
+async def get_active_user_goals(user_id: int, db_session) -> List[Dict[str, Any]]:
+    """Get user's active fitness goals."""
+    return [
+        {
+            "goal": "lose_weight",
+            "target": "10 lbs",
+            "deadline": "2024-03-01",
+            "progress": 65,
+            "status": "on_track"
+        },
+        {
+            "goal": "increase_strength",
+            "target": "bench press bodyweight",
+            "deadline": "2024-04-15",
+            "progress": 40,
+            "status": "slightly_behind"
+        }
+    ]
+
+async def get_recent_progress_summary(user_id: int, db_session) -> Dict[str, Any]:
+    """Get summary of recent fitness progress."""
+    return {
+        "weight_change": -2.3,
+        "strength_improvements": ["bench_press_up_10lbs", "squat_up_15lbs"],
+        "consistency_score": 8.5,
+        "notable_achievements": ["Completed first 5K run", "Increased workout frequency"],
+        "areas_for_improvement": ["Flexibility", "Sleep consistency"],
+        "last_updated": datetime.utcnow().isoformat()
+    }
+
+def analyze_coaching_response(user_message: str, user_profile: Dict) -> Dict[str, Any]:
+    """Analyze user message to determine coaching approach."""
+    message_lower = user_message.lower()
+    
+    # Determine message type and sentiment
+    if any(word in message_lower for word in ["tired", "exhausted", "sore", "pain"]):
+        coaching_approach = "supportive_recovery"
+        priority = "high"
+    elif any(word in message_lower for word in ["motivated", "ready", "excited", "strong"]):
+        coaching_approach = "encouraging_progressive"
+        priority = "medium"
+    elif any(word in message_lower for word in ["confused", "help", "how", "what"]):
+        coaching_approach = "educational_guidance"
+        priority = "high"
+    else:
+        coaching_approach = "general_supportive"
+        priority = "low"
+    
+    return {
+        "approach": coaching_approach,
+        "priority": priority,
+        "tone": "empathetic" if priority == "high" else "encouraging",
+        "focus_areas": ["safety", "progression", "motivation"]
+    }
+
+async def save_coach_conversation(user_id: int, conversation_data: Dict, db_session):
+    """Save coach conversation to database."""
+    # Mock save operation - replace with actual database save
+    logger.info(f"Saving coach conversation for user {user_id}")
+    pass
+
+def generate_follow_up_suggestions(coaching_context: Dict, user_profile: Dict) -> List[str]:
+    """Generate follow-up suggestions for continued engagement."""
+    suggestions = []
+    
+    approach = coaching_context.get("approach", "general_supportive")
+    
+    if approach == "supportive_recovery":
+        suggestions.extend([
+            "Schedule a gentle stretching session tomorrow",
+            "Track your sleep quality tonight",
+            "Consider a warm bath or massage for recovery"
+        ])
+    elif approach == "encouraging_progressive":
+        suggestions.extend([
+            "Ready to try increasing intensity by 10% next workout?",
+            "Let's set a new personal record goal",
+            "Consider adding a new exercise to your routine"
+        ])
+    elif approach == "educational_guidance":
+        suggestions.extend([
+            "Would you like me to explain proper form for that exercise?",
+            "I can create a step-by-step guide for you",
+            "Let's review your current program together"
+        ])
+    else:
+        suggestions.extend([
+            "How are you feeling about your current progress?",
+            "Any questions about your upcoming workouts?",
+            "Would you like motivation or technical advice?"
+        ])
+    
+    return suggestions[:3]  # Return top 3 suggestions
+
+async def get_or_create_conversation_id(user_id: int, db_session) -> str:
+    """Get or create a conversation ID for tracking coach sessions."""
+    # In real implementation, check if active conversation exists or create new one
+    return f"conv_{user_id}_{int(datetime.utcnow().timestamp())}"
