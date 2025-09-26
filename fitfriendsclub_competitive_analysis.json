@@ -1,0 +1,170 @@
+{
+  "generated_at": "2025-09-26T12:54:51.763747",
+  "platform": {
+    "platform_overview": {
+      "name": "FitFriendsClub",
+      "domain": "fitfriendsclub.com",
+      "positioning": "Premium community-focused fitness with sport-specific training",
+      "target_arpu_monthly": 14.99,
+      "unique_value_props": [
+        "Premium community psychology ('Club' membership)",
+        "Sport-specific professional training (8+ sports)",
+        "Social fitness with friend-matching",
+        "Modern tech stack and UX",
+        "Premium domain asset"
+      ]
+    },
+    "competitive_advantages": {
+      "vs_myfitnesspal": "Superior community + sport-specific training",
+      "vs_strava": "Comprehensive sports + structured training programs",
+      "vs_nike": "Independent platform + true community focus",
+      "vs_classpass": "Digital-first + own content library",
+      "vs_peloton": "Equipment-free + multi-sport approach",
+      "vs_fitbod": "Multi-sport + strong community features"
+    },
+    "market_analysis": {
+      "total_addressable_market": 15600000000,
+      "serviceable_addressable_market": 4200000000,
+      "serviceable_obtainable_market": 180000000,
+      "growth_rate": 0.142
+    }
+  },
+  "competitors": {
+    "tier_1_major_platforms": {
+      "MyFitnessPal": {
+        "valuation": 475000000,
+        "users": 200000000,
+        "focus": "Nutrition tracking",
+        "revenue_model": "Freemium ($9.99/month)",
+        "strengths": [
+          "Large user base",
+          "Nutrition focus",
+          "Under Armour backing"
+        ],
+        "weaknesses": [
+          "Limited community",
+          "No sport-specific training",
+          "Dated UI"
+        ],
+        "arpu_monthly": 9.99
+      },
+      "Strava": {
+        "valuation": 1500000000,
+        "users": 100000000,
+        "focus": "Activity tracking & athlete social",
+        "revenue_model": "Freemium ($5/month)",
+        "strengths": [
+          "Strong athlete community",
+          "Activity tracking",
+          "Social features"
+        ],
+        "weaknesses": [
+          "Limited to endurance sports",
+          "No training programs"
+        ],
+        "arpu_monthly": 5.0
+      },
+      "Nike_Training_Club": {
+        "valuation": "Part of $200B Nike ecosystem",
+        "users": 30000000,
+        "focus": "Branded workouts",
+        "revenue_model": "Free (drives product sales)",
+        "strengths": [
+          "Nike brand",
+          "Free content",
+          "High production value"
+        ],
+        "weaknesses": [
+          "Corporate marketing tool",
+          "Limited community",
+          "No personalization"
+        ],
+        "arpu_monthly": 0
+      }
+    },
+    "tier_2_emerging": {
+      "ClassPass": {
+        "valuation": 1000000000,
+        "users": 60000000,
+        "focus": "Fitness class marketplace",
+        "revenue_model": "Subscription + marketplace fees",
+        "strengths": [
+          "Variety of classes",
+          "Marketplace model"
+        ],
+        "weaknesses": [
+          "Location dependent",
+          "No training content",
+          "High operational costs"
+        ],
+        "arpu_monthly": 15.0
+      },
+      "Peloton_Digital": {
+        "valuation": 8000000000,
+        "users": 2800000,
+        "focus": "Live/on-demand classes",
+        "revenue_model": "$12.99/month digital",
+        "strengths": [
+          "Live classes",
+          "Community features",
+          "High engagement"
+        ],
+        "weaknesses": [
+          "Declining user base",
+          "Equipment dependent",
+          "High churn"
+        ],
+        "arpu_monthly": 12.99
+      },
+      "Fitbod": {
+        "valuation": 50000000,
+        "users": 10000000,
+        "focus": "AI-powered strength training",
+        "revenue_model": "$9.99/month premium",
+        "strengths": [
+          "AI personalization",
+          "Strength focus",
+          "Good UX"
+        ],
+        "weaknesses": [
+          "Limited to strength",
+          "No community",
+          "Narrow focus"
+        ],
+        "arpu_monthly": 9.99
+      }
+    }
+  },
+  "valuations": {
+    "revenue_multiple": 32378400,
+    "user_value": 8100000,
+    "comparable_company": 675000,
+    "asset_based": 5000000
+  },
+  "revenue_projections": {
+    "year_1": {
+      "users": 1000,
+      "arpu_annual": 179.88,
+      "revenue": 179880
+    },
+    "year_2": {
+      "users": 5000,
+      "arpu_annual": 179.88,
+      "revenue": 899400
+    },
+    "year_3": {
+      "users": 15000,
+      "arpu_annual": 179.88,
+      "revenue": 2698200
+    }
+  },
+  "final_recommendation": {
+    "rating": "STRONG_BUY",
+    "target_valuation": 11538350.0,
+    "valuation_range": {
+      "conservative": 675000,
+      "target": 11538350.0,
+      "optimistic": 32378400
+    }
+  }
+}
