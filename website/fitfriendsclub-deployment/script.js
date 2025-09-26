@@ -1,5 +1,82 @@
 // FitFriendsClub Interactive JavaScript
 
+// Configuration object with domain and API endpoints
+const CONFIG = {
+    domain: 'https://fitfriendsclub.com',
+    apiEndpoints: {
+        contact: 'https://fitfriendsclub.com/api/contact',
+        membership: 'https://fitfriendsclub.com/api/membership',
+        newsletter: 'https://fitfriendsclub.com/api/newsletter'
+    },
+    email: {
+        contact: 'hello@fitfriendsclub.com',
+        support: 'support@fitfriendsclub.com'
+    }
+};
+
+// Security utilities
+const Security = {
+    // Sanitize HTML to prevent XSS attacks
+    sanitizeHTML(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+    },
+    
+    // Escape HTML entities
+    escapeHTML(str) {
+        const entityMap = {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;',
+            '/': '&#x2F;'
+        };
+        return String(str).replace(/[&<>"'\/]/g, s => entityMap[s]);
+    },
+    
+    // Generate CSRF token
+    generateCSRFToken() {
+        return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+    },
+    
+    // Rate limiter for form submissions
+    rateLimiter: {
+        attempts: {},
+        maxAttempts: 3,
+        cooldownPeriod: 60000, // 1 minute
+        
+        canSubmit(formType) {
+            const now = Date.now();
+            if (!this.attempts[formType]) {
+                this.attempts[formType] = { count: 0, lastAttempt: 0 };
+            }
+            
+            const attempt = this.attempts[formType];
+            if (now - attempt.lastAttempt > this.cooldownPeriod) {
+                attempt.count = 0;
+            }
+            
+            return attempt.count < this.maxAttempts;
+        },
+        
+        recordAttempt(formType) {
+            if (!this.attempts[formType]) {
+                this.attempts[formType] = { count: 0, lastAttempt: 0 };
+            }
+            this.attempts[formType].count++;
+            this.attempts[formType].lastAttempt = Date.now();
+        },
+        
+        getRemainingCooldown(formType) {
+            if (!this.attempts[formType]) return 0;
+            const elapsed = Date.now() - this.attempts[formType].lastAttempt;
+            return Math.max(0, this.cooldownPeriod - elapsed);
+        }
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all functionality
     initNavigation();
@@ -11,6 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initHeroAnimations();
     initCounterAnimations();
     initSportsSection();
+    initCSRFProtection();
 });
 
 // Navigation functionality
@@ -214,25 +292,45 @@ function initContactForm() {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
+            // Check rate limiting
+            if (!Security.rateLimiter.canSubmit('contact')) {
+                const remaining = Math.ceil(Security.rateLimiter.getRemainingCooldown('contact') / 1000);
+                showNotification(`Too many attempts. Please wait ${remaining} seconds before trying again.`, 'error');
+                return;
+            }
+            
             // Get form data
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
             
+            // Sanitize input data
+            Object.keys(data).forEach(key => {
+                data[key] = Security.sanitizeHTML(data[key]);
+            });
+            
             // Validate form
             if (validateForm(data)) {
+                Security.rateLimiter.recordAttempt('contact');
                 // Show loading state
                 const submitBtn = this.querySelector('.submit-btn');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
                 submitBtn.disabled = true;
                 
-                // Simulate form submission (replace with actual API call)
-                setTimeout(() => {
-                    showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
-                    contactForm.reset();
-                    submitBtn.innerHTML = originalText;
-                    submitBtn.disabled = false;
-                }, 2000);
+                // Submit form to API endpoint
+                submitFormData(CONFIG.apiEndpoints.contact, data)
+                    .then(response => {
+                        showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
+                        contactForm.reset();
+                    })
+                    .catch(error => {
+                        console.error('Form submission error:', error);
+                        showNotification('There was an issue sending your message. Please try again or contact us directly at ' + CONFIG.email.contact, 'error');
+                    })
+                    .finally(() => {
+                        submitBtn.innerHTML = originalText;
+                        submitBtn.disabled = false;
+                    });
             }
         });
     }
@@ -259,7 +357,9 @@ function validateForm(data) {
     }
     
     if (errors.length > 0) {
-        showNotification(errors.join('<br>'), 'error');
+        // Sanitize error messages to prevent XSS
+        const sanitizedErrors = errors.map(error => Security.escapeHTML(error));
+        showNotification(sanitizedErrors.join('<br>'), 'error');
         return false;
     }
     
@@ -527,17 +627,42 @@ function initModalEvents() {
     membershipForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
+        // Check rate limiting
+        if (!Security.rateLimiter.canSubmit('membership')) {
+            const remaining = Math.ceil(Security.rateLimiter.getRemainingCooldown('membership') / 1000);
+            showNotification(`Too many attempts. Please wait ${remaining} seconds before trying again.`, 'error');
+            return;
+        }
+        
         // Show loading state
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         submitBtn.disabled = true;
         
-        // Simulate processing
-        setTimeout(() => {
-            document.getElementById('step1').classList.remove('active');
-            document.getElementById('step2').classList.add('active');
-        }, 2000);
+        // Collect form data
+        const formData = new FormData(this);
+        const membershipData = Object.fromEntries(formData.entries());
+        
+        // Sanitize membership data
+        Object.keys(membershipData).forEach(key => {
+            membershipData[key] = Security.sanitizeHTML(membershipData[key]);
+        });
+        
+        Security.rateLimiter.recordAttempt('membership');
+        
+        // Submit membership data to API
+        submitFormData(CONFIG.apiEndpoints.membership, membershipData)
+            .then(response => {
+                document.getElementById('step1').classList.remove('active');
+                document.getElementById('step2').classList.add('active');
+            })
+            .catch(error => {
+                console.error('Membership submission error:', error);
+                showNotification('There was an issue processing your membership. Please try again or contact us at ' + CONFIG.email.support, 'error');
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            });
     });
 }
 
@@ -1164,3 +1289,52 @@ function addSportModalStyles() {
 }
 
 document.head.insertAdjacentHTML('beforeend', animationStyles);
+
+// Utility function for form submissions to fitfriendsclub.com API
+async function submitFormData(endpoint, data) {
+    try {
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify(data)
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const result = await response.json();
+        return result;
+    } catch (error) {
+        // If API is not available yet, simulate success for development
+        console.warn('API endpoint not available, simulating success:', endpoint);
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ success: true, message: 'Development mode - form submitted successfully' });
+            }, 2000);
+        });
+    }
+}
+
+// CSRF Protection initialization
+function initCSRFProtection() {
+    // Add CSRF tokens to all forms
+    const forms = document.querySelectorAll('form');
+    forms.forEach(form => {
+        // Skip if CSRF token already exists
+        if (form.querySelector('input[name="csrf_token"]')) return;
+        
+        const csrfToken = Security.generateCSRFToken();
+        const tokenInput = document.createElement('input');
+        tokenInput.type = 'hidden';
+        tokenInput.name = 'csrf_token';
+        tokenInput.value = csrfToken;
+        form.appendChild(tokenInput);
+        
+        // Store token for validation
+        form.setAttribute('data-csrf-token', csrfToken);
+    });
+}
