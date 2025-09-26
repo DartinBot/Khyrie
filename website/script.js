@@ -273,32 +273,50 @@ function isValidEmail(email) {
 
 // Membership signup functionality
 function initMembershipSignup() {
-    const joinButtons = document.querySelectorAll('.join-btn, .cta-primary, .plan-btn');
+    const joinButtons = document.querySelectorAll('.join-btn, .cta-primary, .plan-btn, .cta-free-trial, .ai-cta-btn, .premium-btn');
     
     joinButtons.forEach(button => {
         button.addEventListener('click', function(e) {
-            if (this.textContent.includes('Join') || this.textContent.includes('Get Started') || this.textContent.includes('Go VIP')) {
+            if (this.textContent.includes('Join') || 
+                this.textContent.includes('Get Started') || 
+                this.textContent.includes('Go VIP') ||
+                this.textContent.includes('FREE') ||
+                this.textContent.includes('Free') ||
+                this.textContent.includes('Claim') ||
+                this.classList.contains('cta-free-trial') ||
+                this.classList.contains('ai-cta-btn') ||
+                this.classList.contains('premium-btn')) {
                 e.preventDefault();
-                showMembershipModal(this);
+                
+                // Determine if this is a free trial signup
+                const isFreeTrialSignup = this.textContent.includes('FREE') || 
+                                        this.textContent.includes('Free') || 
+                                        this.classList.contains('cta-free-trial') ||
+                                        this.classList.contains('ai-cta-btn') ||
+                                        this.classList.contains('premium-btn');
+                
+                showMembershipModal(this, isFreeTrialSignup);
             }
         });
     });
 }
 
-function showMembershipModal(button) {
-    // Create modal HTML
+function showMembershipModal(button, isFreeTrialSignup = false) {
+    // Create modal HTML with conditional free trial messaging
+    const modalTitle = isFreeTrialSignup ? 'Start Your FREE Month!' : 'Join FitFriendsClub';
     const modalHTML = `
         <div class="modal-overlay" id="membershipModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Join FitFriendsClub</h3>
+                    ${isFreeTrialSignup ? '<div class="free-trial-badge">🎉 FREE MONTH + PREMIUM AI</div>' : ''}
+                    <h3>${modalTitle}</h3>
                     <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="membership-form">
                         <div class="form-step active" id="step1">
-                            <h4>Let's get you started!</h4>
-                            <p>Enter your details to join the premier fitness community</p>
+                            <h4>${isFreeTrialSignup ? 'Claim Your FREE Month!' : "Let's get you started!"}</h4>
+                            <p>${isFreeTrialSignup ? 'Get instant access to Premium AI Features + 8 Elite Sport Programs - completely FREE for your first month!' : 'Enter your details to join the premier fitness community'}</p>
                             <form id="membershipForm">
                                 <div class="form-group">
                                     <label for="memberName">Full Name</label>

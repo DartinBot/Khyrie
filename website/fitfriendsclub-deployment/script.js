@@ -1,82 +1,5 @@
 // FitFriendsClub Interactive JavaScript
 
-// Configuration object with domain and API endpoints
-const CONFIG = {
-    domain: 'https://fitfriendsclub.com',
-    apiEndpoints: {
-        contact: 'https://fitfriendsclub.com/api/contact',
-        membership: 'https://fitfriendsclub.com/api/membership',
-        newsletter: 'https://fitfriendsclub.com/api/newsletter'
-    },
-    email: {
-        contact: 'hello@fitfriendsclub.com',
-        support: 'support@fitfriendsclub.com'
-    }
-};
-
-// Security utilities
-const Security = {
-    // Sanitize HTML to prevent XSS attacks
-    sanitizeHTML(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    },
-    
-    // Escape HTML entities
-    escapeHTML(str) {
-        const entityMap = {
-            '&': '&amp;',
-            '<': '&lt;',
-            '>': '&gt;',
-            '"': '&quot;',
-            "'": '&#39;',
-            '/': '&#x2F;'
-        };
-        return String(str).replace(/[&<>"'\/]/g, s => entityMap[s]);
-    },
-    
-    // Generate CSRF token
-    generateCSRFToken() {
-        return 'csrf_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
-    },
-    
-    // Rate limiter for form submissions
-    rateLimiter: {
-        attempts: {},
-        maxAttempts: 3,
-        cooldownPeriod: 60000, // 1 minute
-        
-        canSubmit(formType) {
-            const now = Date.now();
-            if (!this.attempts[formType]) {
-                this.attempts[formType] = { count: 0, lastAttempt: 0 };
-            }
-            
-            const attempt = this.attempts[formType];
-            if (now - attempt.lastAttempt > this.cooldownPeriod) {
-                attempt.count = 0;
-            }
-            
-            return attempt.count < this.maxAttempts;
-        },
-        
-        recordAttempt(formType) {
-            if (!this.attempts[formType]) {
-                this.attempts[formType] = { count: 0, lastAttempt: 0 };
-            }
-            this.attempts[formType].count++;
-            this.attempts[formType].lastAttempt = Date.now();
-        },
-        
-        getRemainingCooldown(formType) {
-            if (!this.attempts[formType]) return 0;
-            const elapsed = Date.now() - this.attempts[formType].lastAttempt;
-            return Math.max(0, this.cooldownPeriod - elapsed);
-        }
-    }
-};
-
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all functionality
     initNavigation();
@@ -88,7 +11,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initHeroAnimations();
     initCounterAnimations();
     initSportsSection();
-    initCSRFProtection();
 });
 
 // Navigation functionality
@@ -292,45 +214,25 @@ function initContactForm() {
         contactForm.addEventListener('submit', function(e) {
             e.preventDefault();
             
-            // Check rate limiting
-            if (!Security.rateLimiter.canSubmit('contact')) {
-                const remaining = Math.ceil(Security.rateLimiter.getRemainingCooldown('contact') / 1000);
-                showNotification(`Too many attempts. Please wait ${remaining} seconds before trying again.`, 'error');
-                return;
-            }
-            
             // Get form data
             const formData = new FormData(this);
             const data = Object.fromEntries(formData);
             
-            // Sanitize input data
-            Object.keys(data).forEach(key => {
-                data[key] = Security.sanitizeHTML(data[key]);
-            });
-            
             // Validate form
             if (validateForm(data)) {
-                Security.rateLimiter.recordAttempt('contact');
                 // Show loading state
                 const submitBtn = this.querySelector('.submit-btn');
                 const originalText = submitBtn.innerHTML;
                 submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
                 submitBtn.disabled = true;
                 
-                // Submit form to API endpoint
-                submitFormData(CONFIG.apiEndpoints.contact, data)
-                    .then(response => {
-                        showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
-                        contactForm.reset();
-                    })
-                    .catch(error => {
-                        console.error('Form submission error:', error);
-                        showNotification('There was an issue sending your message. Please try again or contact us directly at ' + CONFIG.email.contact, 'error');
-                    })
-                    .finally(() => {
-                        submitBtn.innerHTML = originalText;
-                        submitBtn.disabled = false;
-                    });
+                // Simulate form submission (replace with actual API call)
+                setTimeout(() => {
+                    showNotification('Message sent successfully! We\'ll get back to you soon.', 'success');
+                    contactForm.reset();
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }, 2000);
             }
         });
     }
@@ -357,9 +259,7 @@ function validateForm(data) {
     }
     
     if (errors.length > 0) {
-        // Sanitize error messages to prevent XSS
-        const sanitizedErrors = errors.map(error => Security.escapeHTML(error));
-        showNotification(sanitizedErrors.join('<br>'), 'error');
+        showNotification(errors.join('<br>'), 'error');
         return false;
     }
     
@@ -373,32 +273,50 @@ function isValidEmail(email) {
 
 // Membership signup functionality
 function initMembershipSignup() {
-    const joinButtons = document.querySelectorAll('.join-btn, .cta-primary, .plan-btn');
+    const joinButtons = document.querySelectorAll('.join-btn, .cta-primary, .plan-btn, .cta-free-trial, .ai-cta-btn, .premium-btn');
     
     joinButtons.forEach(button => {
         button.addEventListener('click', function(e) {
-            if (this.textContent.includes('Join') || this.textContent.includes('Get Started') || this.textContent.includes('Go VIP')) {
+            if (this.textContent.includes('Join') || 
+                this.textContent.includes('Get Started') || 
+                this.textContent.includes('Go VIP') ||
+                this.textContent.includes('FREE') ||
+                this.textContent.includes('Free') ||
+                this.textContent.includes('Claim') ||
+                this.classList.contains('cta-free-trial') ||
+                this.classList.contains('ai-cta-btn') ||
+                this.classList.contains('premium-btn')) {
                 e.preventDefault();
-                showMembershipModal(this);
+                
+                // Determine if this is a free trial signup
+                const isFreeTrialSignup = this.textContent.includes('FREE') || 
+                                        this.textContent.includes('Free') || 
+                                        this.classList.contains('cta-free-trial') ||
+                                        this.classList.contains('ai-cta-btn') ||
+                                        this.classList.contains('premium-btn');
+                
+                showMembershipModal(this, isFreeTrialSignup);
             }
         });
     });
 }
 
-function showMembershipModal(button) {
-    // Create modal HTML
+function showMembershipModal(button, isFreeTrialSignup = false) {
+    // Create modal HTML with conditional free trial messaging
+    const modalTitle = isFreeTrialSignup ? 'Start Your FREE Month!' : 'Join FitFriendsClub';
     const modalHTML = `
         <div class="modal-overlay" id="membershipModal">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>Join FitFriendsClub</h3>
+                    ${isFreeTrialSignup ? '<div class="free-trial-badge">🎉 FREE MONTH + PREMIUM AI</div>' : ''}
+                    <h3>${modalTitle}</h3>
                     <button class="modal-close">&times;</button>
                 </div>
                 <div class="modal-body">
                     <div class="membership-form">
                         <div class="form-step active" id="step1">
-                            <h4>Let's get you started!</h4>
-                            <p>Enter your details to join the premier fitness community</p>
+                            <h4>${isFreeTrialSignup ? 'Claim Your FREE Month!' : "Let's get you started!"}</h4>
+                            <p>${isFreeTrialSignup ? 'Get instant access to Premium AI Features + 8 Elite Sport Programs - completely FREE for your first month!' : 'Enter your details to join the premier fitness community'}</p>
                             <form id="membershipForm">
                                 <div class="form-group">
                                     <label for="memberName">Full Name</label>
@@ -627,42 +545,17 @@ function initModalEvents() {
     membershipForm.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Check rate limiting
-        if (!Security.rateLimiter.canSubmit('membership')) {
-            const remaining = Math.ceil(Security.rateLimiter.getRemainingCooldown('membership') / 1000);
-            showNotification(`Too many attempts. Please wait ${remaining} seconds before trying again.`, 'error');
-            return;
-        }
-        
         // Show loading state
         const submitBtn = this.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
         submitBtn.disabled = true;
         
-        // Collect form data
-        const formData = new FormData(this);
-        const membershipData = Object.fromEntries(formData.entries());
-        
-        // Sanitize membership data
-        Object.keys(membershipData).forEach(key => {
-            membershipData[key] = Security.sanitizeHTML(membershipData[key]);
-        });
-        
-        Security.rateLimiter.recordAttempt('membership');
-        
-        // Submit membership data to API
-        submitFormData(CONFIG.apiEndpoints.membership, membershipData)
-            .then(response => {
-                document.getElementById('step1').classList.remove('active');
-                document.getElementById('step2').classList.add('active');
-            })
-            .catch(error => {
-                console.error('Membership submission error:', error);
-                showNotification('There was an issue processing your membership. Please try again or contact us at ' + CONFIG.email.support, 'error');
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            });
+        // Simulate processing
+        setTimeout(() => {
+            document.getElementById('step1').classList.remove('active');
+            document.getElementById('step2').classList.add('active');
+        }, 2000);
     });
 }
 
@@ -1289,52 +1182,3 @@ function addSportModalStyles() {
 }
 
 document.head.insertAdjacentHTML('beforeend', animationStyles);
-
-// Utility function for form submissions to fitfriendsclub.com API
-async function submitFormData(endpoint, data) {
-    try {
-        const response = await fetch(endpoint, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        });
-        
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
-        const result = await response.json();
-        return result;
-    } catch (error) {
-        // If API is not available yet, simulate success for development
-        console.warn('API endpoint not available, simulating success:', endpoint);
-        return new Promise((resolve) => {
-            setTimeout(() => {
-                resolve({ success: true, message: 'Development mode - form submitted successfully' });
-            }, 2000);
-        });
-    }
-}
-
-// CSRF Protection initialization
-function initCSRFProtection() {
-    // Add CSRF tokens to all forms
-    const forms = document.querySelectorAll('form');
-    forms.forEach(form => {
-        // Skip if CSRF token already exists
-        if (form.querySelector('input[name="csrf_token"]')) return;
-        
-        const csrfToken = Security.generateCSRFToken();
-        const tokenInput = document.createElement('input');
-        tokenInput.type = 'hidden';
-        tokenInput.name = 'csrf_token';
-        tokenInput.value = csrfToken;
-        form.appendChild(tokenInput);
-        
-        // Store token for validation
-        form.setAttribute('data-csrf-token', csrfToken);
-    });
-}
