@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initMobileMenu();
     initHeroAnimations();
     initCounterAnimations();
+    initSportsSection();
 });
 
 // Navigation functionality
@@ -721,5 +722,445 @@ const animationStyles = `
         }
     </style>
 `;
+
+document.head.insertAdjacentHTML('beforeend', animationStyles);
+
+// Sports Section Interactive Functionality
+function initSportsSection() {
+    const sportCards = document.querySelectorAll('.sport-card');
+    const sportButtons = document.querySelectorAll('.sport-btn');
+    
+    // Sport program data
+    const sportPrograms = {
+        football: {
+            name: 'Football Elite Training',
+            description: 'Comprehensive football training designed by NFL coaches',
+            features: [
+                'Position-specific skill development',
+                'Strength and conditioning protocols',
+                'Speed and agility enhancement',
+                'Game situation training',
+                'Injury prevention strategies'
+            ],
+            duration: '12-week program',
+            level: 'Beginner to Elite'
+        },
+        basketball: {
+            name: 'Basketball Performance Program',
+            description: 'Professional basketball training used by college and pro players',
+            features: [
+                'Vertical jump development',
+                'Court movement efficiency',
+                'Shooting mechanics improvement',
+                'Defensive positioning',
+                'Mental game strategies'
+            ],
+            duration: '10-week program',
+            level: 'All skill levels'
+        },
+        soccer: {
+            name: 'Soccer Excellence Training',
+            description: 'World-class soccer training from international coaches',
+            features: [
+                'Ball mastery and control',
+                'Tactical awareness training',
+                'Speed and endurance building',
+                'Set piece specialization',
+                'Match preparation protocols'
+            ],
+            duration: '16-week program',
+            level: 'Youth to Professional'
+        },
+        baseball: {
+            name: 'Baseball Power Program',
+            description: 'Complete baseball development for all positions',
+            features: [
+                'Hitting mechanics optimization',
+                'Pitching velocity increase',
+                'Defensive skill enhancement',
+                'Base running efficiency',
+                'Mental approach training'
+            ],
+            duration: '14-week program',
+            level: 'Little League to MLB'
+        },
+        tennis: {
+            name: 'Tennis Mastery Course',
+            description: 'Professional tennis training for competitive players',
+            features: [
+                'Stroke technique refinement',
+                'Court positioning strategies',
+                'Mental toughness training',
+                'Match play tactics',
+                'Fitness and flexibility'
+            ],
+            duration: '12-week program',
+            level: 'Recreational to Tournament'
+        },
+        swimming: {
+            name: 'Swimming Performance Elite',
+            description: 'Olympic-level swimming training protocols',
+            features: [
+                'Stroke efficiency optimization',
+                'Start and turn techniques',
+                'Breathing pattern training',
+                'Race strategy development',
+                'Dryland strength training'
+            ],
+            duration: '20-week program',
+            level: 'Competitive swimmers'
+        },
+        track: {
+            name: 'Track & Field Excellence',
+            description: 'Comprehensive track and field training program',
+            features: [
+                'Event-specific training',
+                'Sprint mechanics improvement',
+                'Distance running strategies',
+                'Field event techniques',
+                'Competition preparation'
+            ],
+            duration: '16-week program',
+            level: 'High School to Elite'
+        },
+        volleyball: {
+            name: 'Volleyball Elite Training',
+            description: 'Professional volleyball development program',
+            features: [
+                'Jumping and spiking power',
+                'Defensive positioning',
+                'Team coordination drills',
+                'Serving accuracy training',
+                'Mental game development'
+            ],
+            duration: '12-week program',
+            level: 'Club to Professional'
+        }
+    };
+    
+    // Add hover animations
+    sportCards.forEach(card => {
+        card.addEventListener('mouseenter', function() {
+            this.style.transform = 'translateY(-8px) scale(1.02)';
+        });
+        
+        card.addEventListener('mouseleave', function() {
+            this.style.transform = 'translateY(0) scale(1)';
+        });
+    });
+    
+    // Handle sport program view buttons
+    sportButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const sportCard = this.closest('.sport-card');
+            const sport = sportCard.dataset.sport;
+            const program = sportPrograms[sport];
+            
+            if (program) {
+                showSportModal(program);
+            }
+        });
+    });
+    
+    // Animate cards on scroll
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const sportsObserver = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+    
+    sportCards.forEach((card, index) => {
+        // Initial state
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(50px)';
+        card.style.transition = `all 0.6s ease ${index * 0.1}s`;
+        
+        // Observe for animation
+        sportsObserver.observe(card);
+    });
+}
+
+// Show sport program modal
+function showSportModal(program) {
+    // Create modal HTML
+    const modalHTML = `
+        <div class="sport-modal-overlay" id="sportModal">
+            <div class="sport-modal">
+                <div class="sport-modal-header">
+                    <h2>${program.name}</h2>
+                    <button class="sport-modal-close">&times;</button>
+                </div>
+                <div class="sport-modal-content">
+                    <p class="sport-description">${program.description}</p>
+                    <div class="sport-details">
+                        <div class="sport-detail">
+                            <h4>Program Duration</h4>
+                            <p>${program.duration}</p>
+                        </div>
+                        <div class="sport-detail">
+                            <h4>Skill Level</h4>
+                            <p>${program.level}</p>
+                        </div>
+                    </div>
+                    <div class="sport-features-list">
+                        <h4>What You'll Learn:</h4>
+                        <ul>
+                            ${program.features.map(feature => `<li>${feature}</li>`).join('')}
+                        </ul>
+                    </div>
+                    <div class="sport-modal-actions">
+                        <button class="cta-primary sport-signup-btn">
+                            <i class="fas fa-star"></i>
+                            Join Program
+                        </button>
+                        <button class="cta-secondary sport-learn-more">
+                            Learn More
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add modal to page
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    
+    // Add modal styles
+    addSportModalStyles();
+    
+    // Get modal elements
+    const modal = document.getElementById('sportModal');
+    const closeBtn = modal.querySelector('.sport-modal-close');
+    const signupBtn = modal.querySelector('.sport-signup-btn');
+    const learnMoreBtn = modal.querySelector('.sport-learn-more');
+    
+    // Show modal with animation
+    setTimeout(() => {
+        modal.classList.add('show');
+    }, 10);
+    
+    // Close modal functionality
+    closeBtn.addEventListener('click', closeSportModal);
+    modal.addEventListener('click', function(e) {
+        if (e.target === modal) {
+            closeSportModal();
+        }
+    });
+    
+    // Sign up button
+    signupBtn.addEventListener('click', function() {
+        closeSportModal();
+        // Scroll to membership section
+        document.getElementById('membership').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    });
+    
+    // Learn more button  
+    learnMoreBtn.addEventListener('click', function() {
+        closeSportModal();
+        // Show contact modal or scroll to contact
+        document.getElementById('contact').scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
+    });
+}
+
+// Close sport modal
+function closeSportModal() {
+    const modal = document.getElementById('sportModal');
+    if (modal) {
+        modal.classList.remove('show');
+        setTimeout(() => {
+            modal.remove();
+        }, 300);
+    }
+}
+
+// Add sport modal styles
+function addSportModalStyles() {
+    if (document.getElementById('sportModalStyles')) return;
+    
+    const styles = document.createElement('style');
+    styles.id = 'sportModalStyles';
+    styles.textContent = `
+        .sport-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            padding: 20px;
+        }
+        
+        .sport-modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .sport-modal {
+            background: white;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.9) translateY(50px);
+            transition: all 0.3s ease;
+        }
+        
+        .sport-modal-overlay.show .sport-modal {
+            transform: scale(1) translateY(0);
+        }
+        
+        .sport-modal-header {
+            padding: 30px 30px 20px;
+            border-bottom: 2px solid #f1f5f9;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sport-modal-header h2 {
+            margin: 0;
+            color: #1e293b;
+            font-size: 1.5rem;
+        }
+        
+        .sport-modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #64748b;
+            line-height: 1;
+            padding: 0;
+        }
+        
+        .sport-modal-close:hover {
+            color: #1e293b;
+        }
+        
+        .sport-modal-content {
+            padding: 30px;
+        }
+        
+        .sport-description {
+            font-size: 1.1rem;
+            color: #475569;
+            margin-bottom: 25px;
+            line-height: 1.6;
+        }
+        
+        .sport-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .sport-detail h4 {
+            margin: 0 0 8px 0;
+            color: #6366f1;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .sport-detail p {
+            margin: 0;
+            font-weight: 600;
+            color: #1e293b;
+        }
+        
+        .sport-features-list h4 {
+            margin: 0 0 15px 0;
+            color: #1e293b;
+            font-size: 1.1rem;
+        }
+        
+        .sport-features-list ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .sport-features-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            position: relative;
+            padding-left: 25px;
+            color: #475569;
+        }
+        
+        .sport-features-list li:before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #10b981;
+            font-weight: bold;
+        }
+        
+        .sport-features-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .sport-modal-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            flex-wrap: wrap;
+        }
+        
+        .sport-modal-actions .cta-primary,
+        .sport-modal-actions .cta-secondary {
+            flex: 1;
+            min-width: 140px;
+            text-align: center;
+            justify-content: center;
+        }
+        
+        @media (max-width: 768px) {
+            .sport-modal {
+                margin: 20px;
+            }
+            
+            .sport-modal-header,
+            .sport-modal-content {
+                padding: 20px;
+            }
+            
+            .sport-details {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .sport-modal-actions {
+                flex-direction: column;
+            }
+        }
+    `;
+    
+    document.head.appendChild(styles);
+}
 
 document.head.insertAdjacentHTML('beforeend', animationStyles);
