@@ -1,0 +1,231 @@
+{
+  "workspace": "/Users/darnellamcguire/Khyrie3.0/src/fitness_mcp/fitness app/fitness app2.0/fitness app 3.0",
+  "analysis": {
+    "backend_components": {
+      "unified_backend.py": {
+        "description": "Main unified backend server",
+        "status": {
+          "exists": true,
+          "size": 9846,
+          "modified": 1758812080.3646343
+        }
+      },
+      "backend_family_api.py": {
+        "description": "Family & Friends API",
+        "status": {
+          "exists": true,
+          "size": 105725,
+          "modified": 1758808948.4004514
+        }
+      },
+      "ai_backend_simple.py": {
+        "description": "Simple AI backend",
+        "status": {
+          "exists": true,
+          "size": 22493,
+          "modified": 1758812080.365959
+        }
+      },
+      "comprehensive_fitness_api.py": {
+        "description": "Comprehensive API",
+        "status": {
+          "exists": true,
+          "size": 26460,
+          "modified": 1758809482.7827904
+        }
+      },
+      "subscription_api.py": {
+        "description": "Subscription management API",
+        "status": {
+          "exists": true,
+          "size": 18756,
+          "modified": 1758844095.3988638
+        }
+      }
+    },
+    "ai_components": {
+      "ai_workout_engine.py": {
+        "description": "AI workout generation engine",
+        "status": {
+          "exists": true,
+          "size": 33739,
+          "modified": 1758806703.8328214
+        }
+      },
+      "adaptive_program_engine.py": {
+        "description": "Adaptive program engine",
+        "status": {
+          "exists": true,
+          "size": 24579,
+          "modified": 1758806703.9049401
+        }
+      },
+      "intelligent_exercise_selector.py": {
+        "description": "Smart exercise selection",
+        "status": {
+          "exists": true,
+          "size": 30222,
+          "modified": 1758806703.8743432
+        }
+      },
+      "premium_ai_features.py": {
+        "description": "Premium AI features",
+        "status": {
+          "exists": true,
+          "size": 34950,
+          "modified": 1758889357.813899
+        }
+      }
+    },
+    "database_components": {
+      "database_models.py": {
+        "description": "Core database models",
+        "status": {
+          "exists": true,
+          "size": 17140,
+          "modified": 1758809482.8197021
+        }
+      },
+      "subscription_models.py": {
+        "description": "Subscription database models",
+        "status": {
+          "exists": true,
+          "size": 9223,
+          "modified": 1758844095.3987894
+        }
+      },
+      "comprehensive_fitness_models.py": {
+        "description": "Comprehensive fitness models",
+        "status": {
+          "exists": true,
+          "size": 22070,
+          "modified": 1758823767.895353
+        }
+      },
+      "main_database.py": {
+        "description": "Main database integration",
+        "status": {
+          "exists": true,
+          "size": 9977,
+          "modified": 1758809482.939679
+        }
+      }
+    },
+    "frontend_components": {
+      "dashboard.html": {
+        "description": "Main dashboard interface",
+        "status": {
+          "exists": true,
+          "size": 0,
+          "modified": 1758848105.6534204
+        }
+      },
+      "ai_dashboard.html": {
+        "description": "AI dashboard interface",
+        "status": {
+          "exists": true,
+          "size": 7872,
+          "modified": 1758813999.794648
+        }
+      },
+      "subscription_test.html": {
+        "description": "Subscription test interface",
+        "status": {
+          "exists": true,
+          "size": 15688,
+          "modified": 1758844095.451627
+        }
+      },
+      "mobile.html": {
+        "description": "Mobile interface",
+        "status": {
+          "exists": true,
+          "size": 12283,
+          "modified": 1758841610.9119813
+        }
+      },
+      "enhanced_group_workouts.html": {
+        "description": "Group workouts interface",
+        "status": {
+          "exists": true,
+          "size": 11120,
+          "modified": 1758827663.1480973
+        }
+      }
+    },
+    "integration_components": {
+      "integration_utility.py": {
+        "description": "Integration testing utility",
+        "status": {
+          "exists": true,
+          "size": 10586,
+          "modified": 1758809791.4012492
+        }
+      },
+      "stripe_integration.py": {
+        "description": "Payment processing",
+        "status": {
+          "exists": true,
+          "size": 9345,
+          "modified": 1758844095.390266
+        }
+      },
+      "khyrie_integration.sh": {
+        "description": "Integration shell script",
+        "status": {
+          "exists": true,
+          "size": 7092,
+          "modified": 1758809791.4075413
+        }
+      }
+    },
+    "config_components": {
+      "requirements.txt": {
+        "description": "Python dependencies",
+        "status": {
+          "exists": true,
+          "size": 566,
+          "modified": 1758818179.2809854
+        }
+      },
+      "package.json": {
+        "description": "Node.js/frontend dependencies",
+        "status": {
+          "exists": true,
+          "size": 1469,
+          "modified": 1758750447.482392
+        }
+      },
+      "manifest.json": {
+        "description": "PWA manifest",
+        "status": {
+          "exists": true,
+          "size": 4401,
+          "modified": 1758841610.9126823
+        }
+      },
+      ".env.example": {
+        "description": "Environment configuration template",
+        "status": {
+          "exists": true,
+          "size": 473,
+          "modified": 1758844095.3993928
+        }
+      },
+      "vercel.json": {
+        "description": "Vercel deployment config",
+        "status": {
+          "exists": true,
+          "size": 563,
+          "modified": 1758814858.5421941
+        }
+      }
+    }
+  },
+  "summary": {
+    "total_files": 26,
+    "existing_files": 26,
+    "missing_files": 0,
+    "completion_percentage": 100.0
+  }
+}

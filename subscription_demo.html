@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khyrie Premium - Subscription Plans</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 3rem;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .pricing-card {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.15);
+        }
+
+        .pricing-card.recommended {
+            border: 3px solid #667eea;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.recommended::before {
+            content: "Most Popular";
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .tier-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #333;
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-price {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 0.5rem;
+        }
+
+        .tier-price .period {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 400;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 1rem;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .subscribe-btn:hover {
+            background: #5a67d8;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-bottom: 2rem;
+        }
+
+        .features-list li {
+            padding: 0.5rem 0;
+            color: #333;
+            position: relative;
+            padding-left: 1.5rem;
+        }
+
+        .features-list li::before {
+            content: "✅";
+            position: absolute;
+            left: 0;
+            color: #4CAF50;
+        }
+
+        .demo-section {
+            background: white;
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .demo-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .demo-btn {
+            padding: 0.75rem 1.5rem;
+            background: #f0f0f0;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .demo-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .demo-result {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f9f9f9;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+
+        .error-message {
+            background: #ffebee;
+            color: #c62828;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #c62828;
+        }
+
+        .success-message {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #2e7d32;
+        }
+
+        @media (max-width: 768px) {
+            .pricing-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .pricing-card.recommended {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>💳 Khyrie Subscription Demo</h1>
+            <p>Test the premium features and subscription system</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- Free Tier -->
+            <div class="pricing-card">
+                <div class="tier-name">Free</div>
+                <div class="tier-price">$0 <span class="period">/month</span></div>
+                <ul class="features-list">
+                    <li>Basic workout tracking</li>
+                    <li>Exercise library (50 exercises)</li>
+                    <li>Family group (3 members)</li>
+                    <li>Basic progress charts</li>
+                </ul>
+                <button class="subscribe-btn" disabled>Current Plan</button>
+            </div>
+
+            <!-- Premium Tier -->
+            <div class="pricing-card recommended">
+                <div class="tier-name">Premium</div>
+                <div class="tier-price">$9.99 <span class="period">/month</span></div>
+                <ul class="features-list">
+                    <li>AI workout generation</li>
+                    <li>Advanced progress analytics</li>
+                    <li>Unlimited family members</li>
+                    <li>Custom meal plans</li>
+                    <li>Priority support</li>
+                </ul>
+                <button class="subscribe-btn" onclick="simulateUpgrade('premium')">Subscribe Now</button>
+            </div>
+
+            <!-- Pro Tier -->
+            <div class="pricing-card">
+                <div class="tier-name">Pro</div>
+                <div class="tier-price">$19.99 <span class="period">/month</span></div>
+                <ul class="features-list">
+                    <li>Everything in Premium +</li>
+                    <li>Real-time form analysis</li>
+                    <li>Injury risk prediction</li>
+                    <li>Advanced AI coaching</li>
+                    <li>Wearable integration</li>
+                </ul>
+                <button class="subscribe-btn" onclick="simulateUpgrade('pro')">Subscribe Now</button>
+            </div>
+
+            <!-- Elite Tier -->
+            <div class="pricing-card">
+                <div class="tier-name">Elite</div>
+                <div class="tier-price">$39.99 <span class="period">/month</span></div>
+                <ul class="features-list">
+                    <li>Everything in Pro +</li>
+                    <li>AI voice coaching</li>
+                    <li>AR workout experiences</li>
+                    <li>Personal trainer sessions</li>
+                    <li>24/7 AI monitoring</li>
+                </ul>
+                <button class="subscribe-btn" onclick="simulateUpgrade('elite')">Subscribe Now</button>
+            </div>
+        </div>
+
+        <!-- Demo Section -->
+        <div class="demo-section">
+            <h2>🎯 Test Premium Features</h2>
+            <p>Try out the AI features to see what you'll get with each subscription tier:</p>
+            
+            <div class="demo-buttons">
+                <button class="demo-btn" onclick="demoFeature('ai-workout')">
+                    🤖 AI Workout Generation (Premium+)
+                </button>
+                <button class="demo-btn" onclick="demoFeature('progress-analysis')">
+                    📊 Progress Analysis (Premium+)
+                </button>
+                <button class="demo-btn" onclick="demoFeature('nutrition')">
+                    🥗 Nutrition Recommendations (Premium+)
+                </button>
+                <button class="demo-btn" onclick="demoFeature('form-analysis')">
+                    🎯 Form Analysis (Pro+)
+                </button>
+                <button class="demo-btn" onclick="demoFeature('injury-prediction')">
+                    ⚠️ Injury Risk Prediction (Pro+)
+                </button>
+                <button class="demo-btn" onclick="demoFeature('voice-coaching')">
+                    🎤 AI Voice Coaching (Elite)
+                </button>
+            </div>
+            
+            <div id="demo-result" class="demo-result">
+                <!-- Results will be displayed here -->
+            </div>
+        </div>
+
+        <!-- Current Status -->
+        <div class="demo-section" style="margin-top: 2rem;">
+            <h2>📋 Current Subscription Status</h2>
+            <div id="subscription-status">Loading...</div>
+            <button class="demo-btn" onclick="loadSubscriptionStatus()" style="margin-top: 1rem;">
+                🔄 Refresh Status
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Current user tier for demo
+        let currentTier = 'free';
+
+        // Simulate subscription upgrade
+        function simulateUpgrade(tier) {
+            // Show loading state
+            showMessage(`Upgrading to ${tier.toUpperCase()}...`, 'info');
+            
+            // Simulate API call
+            setTimeout(() => {
+                currentTier = tier;
+                showMessage(`Successfully upgraded to ${tier.toUpperCase()} plan! 🎉`, 'success');
+                updateSubscriptionStatus();
+            }, 2000);
+        }
+
+        // Demo feature testing
+        async function demoFeature(feature) {
+            const resultDiv = document.getElementById('demo-result');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = '<p>Loading...</p>';
+
+            // Simulate API calls with realistic delays
+            setTimeout(() => {
+                switch(feature) {
+                    case 'ai-workout':
+                        if (canAccessFeature('premium')) {
+                            resultDiv.innerHTML = `
+                                <h3>🤖 AI-Generated Workout</h3>
+                                <strong>Personalized Intermediate Upper Body Workout</strong>
+                                <ul>
+                                    <li>Push-ups: 3 sets of 12-15 reps</li>
+                                    <li>Pull-ups: 3 sets of 8-12 reps</li>
+                                    <li>Shoulder Press: 3 sets of 10-15 reps</li>
+                                    <li>Plank: 3 sets of 45 seconds</li>
+                                </ul>
+                                <p><em>Estimated Duration: 30 minutes | Calories: 285</em></p>
+                                <p><strong>AI Notes:</strong> Focus on controlled movements. Take 60-90 seconds rest between sets.</p>
+                            `;
+                        } else {
+                            showUpgradeRequired('Premium');
+                        }
+                        break;
+
+                    case 'progress-analysis':
+                        if (canAccessFeature('premium')) {
+                            resultDiv.innerHTML = `
+                                <h3>📊 Progress Analysis</h3>
+                                <p><strong>Weekly Summary:</strong></p>
+                                <ul>
+                                    <li>Total Workouts: 5 (↑ 25% from last week)</li>
+                                    <li>Average Duration: 32 minutes</li>
+                                    <li>Consistency Score: 85%</li>
+                                    <li>Calories Burned: 1,420 total</li>
+                                </ul>
+                                <p><strong>AI Insights:</strong> Great improvement in consistency! Consider adding 1 more strength session for optimal results.</p>
+                            `;
+                        } else {
+                            showUpgradeRequired('Premium');
+                        }
+                        break;
+
+                    case 'nutrition':
+                        if (canAccessFeature('premium')) {
+                            resultDiv.innerHTML = `
+                                <h3>🥗 Nutrition Recommendations</h3>
+                                <p><strong>Daily Targets:</strong></p>
+                                <ul>
+                                    <li>Calories: 2,185</li>
+                                    <li>Protein: 112g (20%)</li>
+                                    <li>Carbs: 246g (45%)</li>
+                                    <li>Fat: 61g (25%)</li>
+                                    <li>Water: 2.5 liters</li>
+                                </ul>
+                                <p><strong>AI Meal Suggestions:</strong></p>
+                                <ul>
+                                    <li>Breakfast: Greek yogurt with berries and granola</li>
+                                    <li>Lunch: Grilled chicken with quinoa and vegetables</li>
+                                    <li>Dinner: Salmon with sweet potato and broccoli</li>
+                                </ul>
+                            `;
+                        } else {
+                            showUpgradeRequired('Premium');
+                        }
+                        break;
+
+                    case 'form-analysis':
+                        if (canAccessFeature('pro')) {
+                            resultDiv.innerHTML = `
+                                <h3>🎯 Real-time Form Analysis</h3>
+                                <p><strong>Exercise:</strong> Squat Analysis</p>
+                                <ul>
+                                    <li>Form Score: 87/100 ✅</li>
+                                    <li>Injury Risk: Low (15%)</li>
+                                    <li>Knee Alignment: Good</li>
+                                    <li>Depth: Optimal (90°)</li>
+                                </ul>
+                                <p><strong>Recommendations:</strong></p>
+                                <ul>
+                                    <li>Keep your core slightly more engaged</li>
+                                    <li>Focus on controlled descent</li>
+                                    <li>Excellent knee tracking!</li>
+                                </ul>
+                            `;
+                        } else {
+                            showUpgradeRequired('Pro');
+                        }
+                        break;
+
+                    case 'injury-prediction':
+                        if (canAccessFeature('pro')) {
+                            resultDiv.innerHTML = `
+                                <h3>⚠️ Injury Risk Assessment</h3>
+                                <p><strong>Overall Risk Level: LOW</strong></p>
+                                <ul>
+                                    <li>Overtraining Risk: 15% (Low)</li>
+                                    <li>Muscle Imbalance Risk: 10% (Very Low)</li>
+                                    <li>Recovery Status: Good</li>
+                                </ul>
+                                <p><strong>Prevention Recommendations:</strong></p>
+                                <ul>
+                                    <li>Schedule 1-2 rest days this week</li>
+                                    <li>Add 10 minutes of stretching after workouts</li>
+                                    <li>Consider a deload week in 2 weeks</li>
+                                </ul>
+                            `;
+                        } else {
+                            showUpgradeRequired('Pro');
+                        }
+                        break;
+
+                    case 'voice-coaching':
+                        if (canAccessFeature('elite')) {
+                            resultDiv.innerHTML = `
+                                <h3>🎤 AI Voice Coaching Session</h3>
+                                <p><strong>Session:</strong> "Motivational Push-Up Challenge"</p>
+                                <div style="background: #f0f8ff; padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+                                    <p><em>"Great job getting started! Position your hands shoulder-width apart... 
+                                    Perfect! Now lower yourself slowly... Excellent form! 
+                                    Push back up with power... You've got this! 
+                                    Remember to breathe... Outstanding effort!"</em></p>
+                                </div>
+                                <p><strong>Features:</strong></p>
+                                <ul>
+                                    <li>Real-time form cues</li>
+                                    <li>Personalized motivation</li>
+                                    <li>Adaptive intensity</li>
+                                    <li>Progress celebrations</li>
+                                </ul>
+                            `;
+                        } else {
+                            showUpgradeRequired('Elite');
+                        }
+                        break;
+                }
+            }, 1500);
+        }
+
+        // Check if user can access feature
+        function canAccessFeature(requiredTier) {
+            const tierLevels = { 'free': 0, 'premium': 1, 'pro': 2, 'elite': 3 };
+            return tierLevels[currentTier] >= tierLevels[requiredTier];
+        }
+
+        // Show upgrade required message
+        function showUpgradeRequired(requiredTier) {
+            const resultDiv = document.getElementById('demo-result');
+            resultDiv.innerHTML = `
+                <div style="text-align: center; padding: 2rem;">
+                    <h3>🔒 Premium Feature</h3>
+                    <p>This feature requires a <strong>${requiredTier}</strong> subscription or higher.</p>
+                    <p>Your current plan: <strong>${currentTier.toUpperCase()}</strong></p>
+                    <button class="subscribe-btn" onclick="simulateUpgrade('${requiredTier.toLowerCase()}')" 
+                            style="margin-top: 1rem; max-width: 200px;">
+                        Upgrade to ${requiredTier}
+                    </button>
+                </div>
+            `;
+        }
+
+        // Load subscription status
+        function loadSubscriptionStatus() {
+            const statusDiv = document.getElementById('subscription-status');
+            
+            statusDiv.innerHTML = `
+                <div style="background: #f0f8ff; padding: 1rem; border-radius: 8px;">
+                    <h3>Current Plan: ${currentTier.toUpperCase()}</h3>
+                    <p><strong>Status:</strong> Active</p>
+                    <p><strong>Billing:</strong> ${currentTier === 'free' ? 'Free forever' : `$${getPriceForTier(currentTier)}/month`}</p>
+                    <p><strong>Features Available:</strong></p>
+                    <ul>
+                        ${getAvailableFeatures().map(feature => `<li>${feature}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        // Get price for tier
+        function getPriceForTier(tier) {
+            const prices = { 'free': 0, 'premium': 9.99, 'pro': 19.99, 'elite': 39.99 };
+            return prices[tier];
+        }
+
+        // Get available features for current tier
+        function getAvailableFeatures() {
+            const allFeatures = {
+                'free': ['Basic workout tracking', 'Exercise library (50)', 'Family group (3 members)'],
+                'premium': ['AI workout generation', 'Advanced analytics', 'Unlimited family', 'Custom meal plans'],
+                'pro': ['Real-time form analysis', 'Injury prediction', 'Advanced AI coaching', 'Wearable integration'],
+                'elite': ['AI voice coaching', 'AR workouts', 'Personal trainer sessions', '24/7 monitoring']
+            };
+            
+            let features = [];
+            const tierLevels = ['free', 'premium', 'pro', 'elite'];
+            const currentIndex = tierLevels.indexOf(currentTier);
+            
+            for (let i = 0; i <= currentIndex; i++) {
+                features = features.concat(allFeatures[tierLevels[i]]);
+            }
+            
+            return features;
+        }
+
+        // Show messages
+        function showMessage(message, type = 'info') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type === 'success' ? 'success-message' : 
+                                 type === 'error' ? 'error-message' : 
+                                 'demo-result';
+            messageDiv.textContent = message;
+            
+            document.body.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 3000);
+        }
+
+        // Update subscription status display
+        function updateSubscriptionStatus() {
+            loadSubscriptionStatus();
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSubscriptionStatus();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Khyrie3.0 - Unified Fitness Platform</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="favicon.ico">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #764ba2;
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ff4757;
+        }
+
+        .status-dot.connected {
+            background: #2ed573;
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 2rem;
+        }
+
+        .sidebar {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            height: fit-content;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .main-content {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .widget {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .nav-menu {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-item:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin: 0.5rem 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.secondary {
+            background: transparent;
+            color: #764ba2;
+            border: 2px solid #764ba2;
+        }
+
+        .btn.secondary:hover {
+            background: #764ba2;
+            color: white;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .output-area {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+        }
+
+        .loading {
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .success {
+            color: #2ed573;
+        }
+
+        .error {
+            color: #ff4757;
+        }
+
+        .info {
+            color: #3742fa;
+        }
+
+        @media (max-width: 968px) {
+            .main-container {
+                grid-template-columns: 1fr;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .subscription-tier {
+            background: linear-gradient(45deg, #ffd700, #ffed4e);
+            color: #333;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            display: inline-block;
+            margin: 0.5rem 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo">🏋️‍♀️ Khyrie3.0</div>
+            <div class="status-indicators">
+                <div class="status-dot" id="backendStatus"></div>
+                <span id="backendStatusText">Connecting...</span>
+                <div class="subscription-tier" id="userTier">Free Plan</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <h3>Navigation</h3>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-section="dashboard">
+                    📊 Dashboard
+                </li>
+                <li class="nav-item" data-section="ai-features">
+                    🤖 AI Features
+                </li>
+                <li class="nav-item" data-section="family-tools">
+                    👨‍👩‍👧‍👦 Family & Friends
+                </li>
+                <li class="nav-item" data-section="subscriptions">
+                    💳 Subscriptions
+                </li>
+                <li class="nav-item" data-section="settings">
+                    ⚙️ Settings
+                </li>
+            </ul>
+
+            <div class="widget">
+                <h4>Quick Actions</h4>
+                <button class="btn" onclick="generateQuickWorkout()">
+                    🚀 Quick Workout
+                </button>
+                <button class="btn secondary" onclick="checkSystemHealth()">
+                    🔍 System Health
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Dashboard Section -->
+            <section id="dashboard" class="section active">
+                <h1>Welcome to Khyrie3.0</h1>
+                <p>Your unified fitness platform with AI-powered coaching and family features.</p>
+
+                <div class="feature-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="totalWorkouts">0</div>
+                        <div class="metric-label">Total Workouts</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="aiGenerations">0</div>
+                        <div class="metric-label">AI Workouts Generated</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="familyMembers">0</div>
+                        <div class="metric-label">Family Members</div>
+                    </div>
+                </div>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🤖</div>
+                        <h3>AI-Powered Workouts</h3>
+                        <p>Get personalized workout recommendations based on your fitness level and goals.</p>
+                        <button class="btn" onclick="switchSection('ai-features')">
+                            Explore AI Features
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">👨‍👩‍👧‍👦</div>
+                        <h3>Family Fitness</h3>
+                        <p>Create family workout groups and track progress together.</p>
+                        <button class="btn" onclick="switchSection('family-tools')">
+                            Family Features
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <div class="feature-icon">💎</div>
+                        <h3>Premium Features</h3>
+                        <p>Unlock advanced AI coaching and premium analytics.</p>
+                        <button class="btn" onclick="switchSection('subscriptions')">
+                            View Plans
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Features Section -->
+            <section id="ai-features" class="section">
+                <h1>AI-Powered Features</h1>
+                <p>Advanced artificial intelligence to enhance your fitness journey.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>🎯 Workout Generation</h3>
+                        <p>Create personalized workouts based on your preferences.</p>
+                        <button class="btn" onclick="generateAIWorkout()">
+                            Generate Workout
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📊 Progress Analysis</h3>
+                        <p>AI-powered insights into your fitness progress.</p>
+                        <button class="btn" onclick="analyzeProgress()">
+                            Analyze Progress
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🏃‍♂️ Form Analysis</h3>
+                        <p>Real-time form correction and injury prevention.</p>
+                        <button class="btn" onclick="analyzeForm()" id="formAnalysisBtn">
+                            Analyze Form (Pro+)
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🗣️ AI Coach</h3>
+                        <p>Personal AI trainer with voice guidance.</p>
+                        <button class="btn" onclick="startVoiceCoaching()" id="voiceCoachBtn">
+                            Voice Coaching (Elite)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="output-area" id="aiOutput" style="display: none;"></div>
+            </section>
+
+            <!-- Family Tools Section -->
+            <section id="family-tools" class="section">
+                <h1>Family & Friends</h1>
+                <p>Connect with family and friends for shared fitness goals.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>👥 Create Group</h3>
+                        <p>Start a fitness group with family or friends.</p>
+                        <button class="btn" onclick="createFamilyGroup()">
+                            Create Group
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <h3>🏆 Challenges</h3>
+                        <p>Set up fitness challenges and competitions.</p>
+                        <button class="btn" onclick="createChallenge()">
+                            New Challenge
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📈 Group Progress</h3>
+                        <p>Track collective fitness achievements.</p>
+                        <button class="btn" onclick="viewGroupProgress()">
+                            View Progress
+                        </button>
+                    </div>
+                </div>
+
+                <div class="output-area" id="familyOutput" style="display: none;"></div>
+            </section>
+
+            <!-- Subscriptions Section -->
+            <section id="subscriptions" class="section">
+                <h1>Subscription Plans</h1>
+                <p>Unlock premium features with our flexible subscription plans.</p>
+
+                <div class="feature-grid" id="subscriptionPlans">
+                    <!-- Plans will be loaded dynamically -->
+                </div>
+
+                <div class="output-area" id="subscriptionOutput" style="display: none;"></div>
+            </section>
+
+            <!-- Settings Section -->
+            <section id="settings" class="section">
+                <h1>Settings</h1>
+                <p>Configure your Khyrie3.0 experience.</p>
+
+                <div class="feature-grid">
+                    <div class="feature-card">
+                        <h3>🔧 System Status</h3>
+                        <p>Check backend connectivity and service status.</p>
+                        <button class="btn" onclick="checkIntegrationStatus()">
+                            Check Status
+                        </button>
+                    </div>
+                    <div class="feature-card">
+                        <h3>📱 PWA Settings</h3>
+                        <p>Progressive Web App configuration.</p>
+                        <button class="btn" onclick="installPWA()">
+                            Install App
+                        </button>
+                    </div>
+                </div>
+
+                <div class="output-area" id="settingsOutput" style="display: none;"></div>
+            </section>
+        </main>
+
+        <!-- Right Sidebar -->
+        <aside class="sidebar">
+            <div class="widget">
+                <h4>System Status</h4>
+                <div id="systemStatus">
+                    <div>Backend: <span id="backendStatusDetail">Checking...</span></div>
+                    <div>AI Engine: <span id="aiStatusDetail">Checking...</span></div>
+                    <div>Database: <span id="dbStatusDetail">Checking...</span></div>
+                </div>
+            </div>
+
+            <div class="widget">
+                <h4>Recent Activity</h4>
+                <div id="recentActivity">
+                    <p>No recent activity</p>
+                </div>
+            </div>
+
+            <div class="widget">
+                <h4>Quick Stats</h4>
+                <div id="quickStats">
+                    <div>Integration: <span id="integrationLevel">100%</span></div>
+                    <div>Features: <span id="availableFeatures">Loading...</span></div>
+                </div>
+            </div>
+        </aside>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="khyrie-frontend.js"></script>
+</body>
+</html>

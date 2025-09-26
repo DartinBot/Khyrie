@@ -1,60 +1,40 @@
-// Khyrie Family & Friends Social Network JavaScript
+import React, { useState, useEffect } from 'react';
+import './FamilyFriends.css';
 
-class FamilyFriendsApp {
-    constructor() {
-        this.activeTab = 'dashboard';
-        this.dashboardData = null;
-        this.userGroups = [];
-        this.activeChallenges = [];
-        this.liveWorkouts = [];
-        this.loading = true;
-        this.userId = 'user123'; // Would come from authentication
-        this.notifications = [];
-        this.encouragementQueue = [];
-        
-        this.init();
-    }
+const FamilyFriends = () => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [dashboardData, setDashboardData] = useState(null);
+  const [userGroups, setUserGroups] = useState([]);
+  const [activeChallenges, setActiveChallenges] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    async init() {
-        console.log('🏋️‍♂️ Initializing Family & Friends Social Network');
-        
-        await this.loadDashboardData();
-        this.setupEventListeners();
-        this.initializeRealTimeUpdates();
-        this.startNotificationSystem();
-        
-        // Initialize UI
-        this.renderCurrentTab();
-        
-        console.log('✅ Family & Friends app initialized');
-    }
+  // Mock user ID - would come from authentication
+  const userId = 'user123';
 
-    async loadDashboardData() {
-        try {
-            this.showLoadingState();
-            
-            // Load data in parallel for better performance
-            const [dashboardData, groupsData, challengesData, liveData] = await Promise.all([
-                this.fetchDashboardData(),
-                this.fetchUserGroups(),
-                this.fetchActiveChallenges(),
-                this.fetchLiveWorkouts()
-            ]);
-            
-            this.dashboardData = dashboardData;
-            this.userGroups = groupsData;
-            this.activeChallenges = challengesData;
-            this.liveWorkouts = liveData;
-            
-            this.loading = false;
-            this.hideLoadingState();
-            
-        } catch (error) {
-            console.error('Error loading dashboard:', error);
-            this.loading = false;
-            this.loadOfflineData();
-        }
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load dashboard data
+      const dashboardResponse = await fetch(`/api/dashboard/family-friends/${userId}`);
+      const dashboard = await dashboardResponse.json();
+      setDashboardData(dashboard.dashboard_data);
+      
+      // Load user groups
+      const groupsResponse = await fetch(`/api/groups/user/${userId}`);
+      const groups = await groupsResponse.json();
+      setUserGroups(groups.user_groups || []);
+      
+      setLoading(false);
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+      setLoading(false);
     }
+  };
 
   const renderDashboard = () => {
     if (loading) {

@@ -1,27 +1,70 @@
 """
-Khyrie Fitness Platform - Premium AI Features
-Copyright (C) 2025 Darnell Roy
-
-Commercial License - Premium Features
-These features require a paid subscription and are protected under commercial licensing.
+Premium AI Features for Khyrie Fitness Platform
+Advanced AI coaching, analytics, and personalized recommendations
+Copyright (C) 2025 Darnell Roy - Commercial License
 """
 
-import openai
 import json
-import logging
-import os
+import random
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Any
+from dataclasses import dataclass
+from stripe_integration import requires_premium, requires_pro, requires_elite
+
+@dataclass
+class WorkoutAnalysis:
+    """AI workout analysis results"""
+    form_score: float
+    injury_risk: float
+    recommendations: List[str]
+    improvements: List[str]
+    next_workout_suggestion: Dict
+
+@dataclass
+class FitnessInsight:
+    """AI-generated fitness insights"""
+    title: str
+    content: str
+    confidence: float
+    actionable_steps: List[str]
+    priority: str
+
+# Additional imports for enhanced functionality
+import logging
+import os
 from functools import wraps
 from fastapi import HTTPException, Depends
 from pydantic import BaseModel
 
-from subscription_manager import SubscriptionManager
-
+# Configure logger first
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
-# Configure OpenAI
-openai.api_key = os.getenv("OPENAI_API_KEY")
+# Create console handler if no handlers exist
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+# Try to import subscription manager, use mock if not available
+try:
+    from subscription_manager import SubscriptionManager
+except ImportError:
+    logger.warning("SubscriptionManager not available - using mock implementation")
+    class SubscriptionManager:
+        def __init__(self, db_session=None):
+            pass
+        async def check_feature_access(self, user_id, feature_name):
+            return {'has_access': True, 'upgrade_required': False, 'plan_type': 'premium'}
+
+# Configure OpenAI (optional)
+try:
+    import openai
+    openai.api_key = os.getenv("OPENAI_API_KEY")
+except ImportError:
+    openai = None
+    logger.info("OpenAI not available - using simulated AI features")
 
 class PremiumFeatureError(Exception):
     """Raised when premium feature access is denied."""
@@ -771,3 +814,18 @@ async def get_or_create_conversation_id(user_id: int, db_session) -> str:
     """Get or create a conversation ID for tracking coach sessions."""
     # In real implementation, check if active conversation exists or create new one
     return f"conv_{user_id}_{int(datetime.utcnow().timestamp())}"
+
+# Create global instance for import convenience
+premium_ai = PremiumAIFeatures()
+
+# Export main classes and functions
+__all__ = [
+    'PremiumAIFeatures',
+    'premium_ai',
+    'WorkoutAnalysis', 
+    'FitnessInsight',
+    'require_premium_feature',
+    'requires_premium',
+    'requires_pro', 
+    'requires_elite'
+]

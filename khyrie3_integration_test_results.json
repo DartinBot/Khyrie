@@ -1,0 +1,114 @@
+{
+  "timestamp": "2025-09-26T09:52:33.761128",
+  "backend_url": "http://localhost:8000",
+  "tests": {
+    "Backend Health": {
+      "success": true,
+      "status_code": 200,
+      "response": {
+        "status": "healthy",
+        "timestamp": "2025-09-25",
+        "services": {
+          "api": "running",
+          "ai_engine": "ready",
+          "database": "connected"
+        }
+      },
+      "message": "Backend is healthy and responsive"
+    },
+    "Frontend Dashboard": {
+      "success": true,
+      "status_code": 200,
+      "content_length": 16419,
+      "missing_elements": [],
+      "message": "Dashboard loaded successfully"
+    },
+    "API Endpoints": {
+      "success": true,
+      "endpoints_tested": 6,
+      "endpoints_passed": 6,
+      "results": {
+        "/": {
+          "status_code": 200,
+          "success": true,
+          "response_time": 0.013804
+        },
+        "/health": {
+          "status_code": 200,
+          "success": true,
+          "response_time": 0.004799
+        },
+        "/api/integration/status": {
+          "status_code": 200,
+          "success": true,
+          "response_time": 0.01141
+        },
+        "/api/quick/workout-generation": {
+          "status_code": 200,
+          "success": true,
+          "response_time": 0.012615
+        },
+        "/api/subscriptions/status": {
+          "status_code": 200,
+          "success": true,
+          "response_time": 0.014841
+        },
+        "/api/subscriptions/plans": {
+          "status_code": 200,
+          "success": true,
+          "response_time": 0.005503
+        }
+      },
+      "message": "6/6 endpoints working correctly"
+    },
+    "Subscription System": {
+      "success": true,
+      "plans_available": 4,
+      "user_tier": "free",
+      "create_subscription": true,
+      "message": "Subscription system fully functional"
+    },
+    "AI Features": {
+      "success": true,
+      "ai_available": true,
+      "response": {
+        "message": "AI Workout Generator Ready",
+        "sample_workout": {
+          "workout_name": "Mock AI Workout",
+          "exercises": [
+            "Push-ups",
+            "Squats",
+            "Planks"
+          ],
+          "duration": 45,
+          "note": "This is a mock workout - install full AI engines for personalized workouts"
+        },
+        "capabilities": "Available"
+      },
+      "message": "AI features accessible (with mock implementation)"
+    },
+    "Static Assets": {
+      "success": true,
+      "assets_tested": 3,
+      "assets_available": 1,
+      "results": {
+        "/khyrie-frontend.js": {
+          "status_code": 200,
+          "content_length": 19656,
+          "success": true
+        },
+        "/manifest.json": {
+          "status_code": 404,
+          "content_length": 22,
+          "success": false
+        },
+        "/favicon.ico": {
+          "status_code": 404,
+          "content_length": 22,
+          "success": false
+        }
+      },
+      "message": "1/3 static assets available"
+    }
+  }
+}

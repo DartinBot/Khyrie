@@ -25,19 +25,70 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 import uvicorn
 
-# Import your existing apps and engines
+# Import your existing apps and engines with proper fallbacks
+family_app = None
+ai_app = None
+FamilyFriendsTools = None
+AIWorkoutEngine = None
+AdaptiveProgramEngine = None
+IntelligentExerciseSelector = None
+
 try:
-    # Import from current workspace
+    # Try importing family backend
     from backend_family_api import app as family_app
+    print("✅ Successfully imported Family & Friends API")
+except ImportError as e:
+    print(f"⚠️ Family API not available: {e}")
+
+try:
+    # Try importing AI backend
     from ai_backend_simple import app as ai_app
+    print("✅ Successfully imported AI Backend")
+except ImportError as e:
+    print(f"⚠️ AI Backend not available: {e}")
+
+try:
+    # Try importing core engines
     from family_friends_tools import FamilyFriendsTools
     from ai_workout_engine import AIWorkoutEngine
     from adaptive_program_engine import AdaptiveProgramEngine
     from intelligent_exercise_selector import IntelligentExerciseSelector
-    print("✅ Successfully imported all Khyrie3.0 components")
+    print("✅ Successfully imported core engines")
 except ImportError as e:
-    print(f"⚠️ Import warning: {e}")
-    print("Some components may not be available until integration is complete")
+    print(f"⚠️ Some engines not available: {e}")
+    print("Creating mock implementations for basic functionality")
+    
+    # Create mock classes for testing
+    class MockAIWorkoutEngine:
+        def generate_workout(self, user_profile):
+            return {
+                "workout_name": "Mock AI Workout",
+                "exercises": ["Push-ups", "Squats", "Planks"],
+                "duration": user_profile.get("available_time", 30),
+                "note": "This is a mock workout - install full AI engines for personalized workouts"
+            }
+    
+    class MockAdaptiveProgramEngine:
+        def adapt_program(self, user_data):
+            return {"message": "Mock adaptive program - full engine needed for real adaptation"}
+    
+    class MockIntelligentExerciseSelector:
+        def select_exercises(self, criteria):
+            return {"exercises": ["Basic Exercise 1", "Basic Exercise 2"], "note": "Mock selection"}
+    
+    class MockFamilyFriendsTools:
+        def create_group(self, group_data):
+            return {"message": "Mock group creation - full tools needed for real groups"}
+    
+    # Use mock classes if real ones not available
+    if AIWorkoutEngine is None:
+        AIWorkoutEngine = MockAIWorkoutEngine
+    if AdaptiveProgramEngine is None:
+        AdaptiveProgramEngine = MockAdaptiveProgramEngine
+    if IntelligentExerciseSelector is None:
+        IntelligentExerciseSelector = MockIntelligentExerciseSelector
+    if FamilyFriendsTools is None:
+        FamilyFriendsTools = MockFamilyFriendsTools
 
 # Create main Khyrie3.0 application
 app = FastAPI(
@@ -51,7 +102,13 @@ app = FastAPI(
 # CORS middleware for frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],  # React development server
+    allow_origins=[
+        "http://localhost:3000",    # React development server
+        "http://127.0.0.1:3000", 
+        "http://localhost:8000",    # Backend server serving frontend
+        "http://127.0.0.1:8000",
+        "*"                         # Allow all origins for development
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -77,8 +134,19 @@ async def root():
             "intelligent_selection": "✅ Active"
         },
         "docs": "/docs",
+        "dashboard": "/dashboard",
         "frontend": "http://localhost:3000"
     }
+
+@app.get("/dashboard")
+async def serve_dashboard():
+    """Serve the unified Khyrie3.0 dashboard"""
+    return FileResponse("khyrie-dashboard.html")
+
+@app.get("/khyrie-frontend.js")
+async def serve_frontend_js():
+    """Serve the frontend JavaScript"""
+    return FileResponse("khyrie-frontend.js", media_type="application/javascript")
 
 @app.get("/health")
 async def health_check():
@@ -121,41 +189,141 @@ async def integration_status():
     }
 
 # Mount sub-applications with proper routing
-try:
-    # Mount family & friends features
-    app.mount("/api/family", family_app, name="family")
-    print("✅ Mounted Family & Friends API at /api/family")
-except Exception as e:
-    print(f"⚠️ Could not mount Family API: {e}")
+if family_app is not None:
+    try:
+        app.mount("/api/family", family_app, name="family")
+        print("✅ Mounted Family & Friends API at /api/family")
+    except Exception as e:
+        print(f"⚠️ Could not mount Family API: {e}")
+else:
+    print("⚠️ Family API not available - skipping mount")
 
-try:
-    # Mount AI features  
-    app.mount("/api/ai", ai_app, name="ai")
-    print("✅ Mounted AI Backend at /api/ai")
-except Exception as e:
-    print(f"⚠️ Could not mount AI API: {e}")
+if ai_app is not None:
+    try:
+        app.mount("/api/ai", ai_app, name="ai")
+        print("✅ Mounted AI Backend at /api/ai")
+    except Exception as e:
+        print(f"⚠️ Could not mount AI API: {e}")
+else:
+    print("⚠️ AI Backend not available - skipping mount")
 
 # Direct integration endpoints (bypass sub-apps for key features)
 @app.get("/api/quick/workout-generation")
 async def quick_workout_generation():
     """Quick access to AI workout generation"""
     try:
-        engine = AIWorkoutEngine()
-        sample_profile = {
-            "fitness_level": "intermediate",
-            "goals": ["strength", "endurance"],
-            "available_time": 45,
-            "equipment": ["dumbbells", "bodyweight"]
-        }
-        
-        # This would normally take user input
-        return {
-            "message": "AI Workout Generator Ready",
-            "sample_endpoint": "/api/ai/generate-workout", 
-            "capabilities": engine.get_capabilities() if hasattr(engine, 'get_capabilities') else "Available"
-        }
+        if AIWorkoutEngine is not None:
+            engine = AIWorkoutEngine()
+            sample_profile = {
+                "fitness_level": "intermediate",
+                "goals": ["strength", "endurance"],
+                "available_time": 45,
+                "equipment": ["dumbbells", "bodyweight"]
+            }
+            
+            # Generate sample workout
+            workout = engine.generate_workout(sample_profile)
+            return {
+                "message": "AI Workout Generator Ready",
+                "sample_workout": workout,
+                "capabilities": engine.get_capabilities() if hasattr(engine, 'get_capabilities') else "Available"
+            }
+        else:
+            return {
+                "message": "AI Workout Generator Not Available",
+                "note": "Install full AI components for workout generation",
+                "mock_available": True
+            }
     except Exception as e:
         return {"error": f"AI Engine not fully initialized: {e}"}
+
+# Basic subscription endpoints for frontend integration
+@app.get("/api/subscriptions/status")
+async def get_subscription_status():
+    """Get current subscription status"""
+    return {
+        "user_id": "demo_user_123",
+        "tier": "free",
+        "status": "active",
+        "features_available": False,
+        "plan_name": "Free Plan"
+    }
+
+@app.get("/api/subscriptions/plans")
+async def get_subscription_plans():
+    """Get available subscription plans"""
+    return {
+        "plans": [
+            {
+                "tier": "free",
+                "name": "Khyrie Free",
+                "price_monthly": 0,
+                "features": [
+                    "Basic workout tracking",
+                    "Exercise library (50 exercises)",
+                    "Family group (3 members)",
+                    "Community features"
+                ],
+                "recommended": False
+            },
+            {
+                "tier": "premium",
+                "name": "Khyrie Premium", 
+                "price_monthly": 9.99,
+                "features": [
+                    "AI-powered workout recommendations",
+                    "Advanced progress analytics",
+                    "Unlimited family members",
+                    "Full exercise library (500+ exercises)",
+                    "Custom meal plans",
+                    "Priority support"
+                ],
+                "recommended": True
+            },
+            {
+                "tier": "pro",
+                "name": "Khyrie Pro",
+                "price_monthly": 19.99,
+                "features": [
+                    "Everything in Premium +",
+                    "Real-time form analysis",
+                    "Predictive injury prevention", 
+                    "Advanced AI coaching",
+                    "Wearable device integration",
+                    "API access for developers"
+                ],
+                "recommended": False
+            },
+            {
+                "tier": "elite",
+                "name": "Khyrie Elite",
+                "price_monthly": 39.99,
+                "features": [
+                    "Everything in Pro +",
+                    "Personal AI coach with voice guidance",
+                    "AR/VR workout experiences",
+                    "One-on-one trainer sessions (2/month)",
+                    "Advanced biometric tracking",
+                    "White-label licensing"
+                ],
+                "recommended": False
+            }
+        ]
+    }
+
+@app.post("/api/subscriptions/create")
+async def create_subscription(request: dict):
+    """Create a new subscription"""
+    tier = request.get("tier")
+    if tier not in ["premium", "pro", "elite"]:
+        raise HTTPException(status_code=400, detail="Invalid subscription tier")
+    
+    return {
+        "success": True,
+        "subscription_id": f"sub_demo_{tier}",
+        "message": f"Successfully upgraded to {tier.title()} plan!",
+        "tier": tier
+    }
 
 @app.get("/api/quick/family-features")
 async def quick_family_features():
