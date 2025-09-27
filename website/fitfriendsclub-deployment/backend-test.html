@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitFriendsClub Backend Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-button {
+            background: #6366f1;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        .test-button:hover {
+            background: #5855eb;
+        }
+        .result {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            white-space: pre-wrap;
+        }
+        .success { border-color: #28a745; background-color: #d4edda; }
+        .error { border-color: #dc3545; background-color: #f8d7da; }
+    </style>
+</head>
+<body>
+    <h1>🚀 FitFriendsClub Backend Test</h1>
+    
+    <div class="test-container">
+        <h2>API Health Check</h2>
+        <button class="test-button" onclick="testHealthCheck()">Test API Health</button>
+        <div id="health-result" class="result"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>User Registration Test</h2>
+        <button class="test-button" onclick="testRegistration()">Test User Registration</button>
+        <div id="registration-result" class="result"></div>
+    </div>
+    
+    <div class="test-container">
+        <h2>User Login Test</h2>
+        <button class="test-button" onclick="testLogin()">Test User Login</button>
+        <div id="login-result" class="result"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5000';
+        
+        async function testHealthCheck() {
+            const resultDiv = document.getElementById('health-result');
+            resultDiv.innerHTML = 'Testing...';
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/`);
+                const data = await response.json();
+                
+                resultDiv.className = 'result success';
+                resultDiv.innerHTML = `✅ Success!\nStatus: ${response.status}\nResponse: ${JSON.stringify(data, null, 2)}`;
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Error: ${error.message}`;
+            }
+        }
+        
+        async function testRegistration() {
+            const resultDiv = document.getElementById('registration-result');
+            resultDiv.innerHTML = 'Testing registration...';
+            
+            const testUser = {
+                username: 'testuser_' + Date.now(),
+                email: `test${Date.now()}@fitfriendsclubs.com`,
+                password: 'testpass123',
+                full_name: 'Test User',
+                fitness_goal: 'weight-loss',
+                experience_level: 'beginner'
+            };
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(testUser)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Registration Success!\nUser ID: ${data.user.id}\nUsername: ${data.user.username}\nToken: ${data.token ? 'Generated' : 'Missing'}`;
+                    
+                    // Store for login test
+                    localStorage.setItem('test_user', JSON.stringify({
+                        username: testUser.username,
+                        password: testUser.password
+                    }));
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Registration Failed: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Network Error: ${error.message}`;
+            }
+        }
+        
+        async function testLogin() {
+            const resultDiv = document.getElementById('login-result');
+            resultDiv.innerHTML = 'Testing login...';
+            
+            const testUser = JSON.parse(localStorage.getItem('test_user') || '{}');
+            
+            if (!testUser.username) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = '❌ No test user found. Please run registration test first.';
+                return;
+            }
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: testUser.username,
+                        password: testUser.password
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Login Success!\nUser: ${data.user.full_name}\nEmail: ${data.user.email}\nToken: ${data.token ? 'Valid' : 'Missing'}`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Login Failed: ${data.error}`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Network Error: ${error.message}`;
+            }
+        }
+        
+        // Auto-test health check on load
+        window.addEventListener('load', testHealthCheck);
+    </script>
+</body>
+</html>

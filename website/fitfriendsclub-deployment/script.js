@@ -288,14 +288,25 @@ function initMembershipSignup() {
                 this.classList.contains('premium-btn')) {
                 e.preventDefault();
                 
-                // Determine if this is a free trial signup
-                const isFreeTrialSignup = this.textContent.includes('FREE') || 
-                                        this.textContent.includes('Free') || 
-                                        this.classList.contains('cta-free-trial') ||
-                                        this.classList.contains('ai-cta-btn') ||
-                                        this.classList.contains('premium-btn');
+                // Check if user is already authenticated
+                if (window.FitFriendsAPI && window.FitFriendsAPI.isAuthenticated()) {
+                    showNotification('Welcome back! You\'re already a member of FitFriendsClub!', 'success');
+                    return;
+                }
                 
-                showMembershipModal(this, isFreeTrialSignup);
+                // Show authentication modal for new users
+                if (window.showAuthModal) {
+                    showAuthModal('register');
+                } else {
+                    // Fallback to original modal if backend integration isn't loaded
+                    const isFreeTrialSignup = this.textContent.includes('FREE') || 
+                                            this.textContent.includes('Free') || 
+                                            this.classList.contains('cta-free-trial') ||
+                                            this.classList.contains('ai-cta-btn') ||
+                                            this.classList.contains('premium-btn');
+                    
+                    showMembershipModal(this, isFreeTrialSignup);
+                }
             }
         });
     });
