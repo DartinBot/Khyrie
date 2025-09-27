@@ -1,6 +1,6 @@
 {
   "deployment_info": {
-    "domain": "fitfriendsclub.com",
+    "domain": "fitfriendsclubs.com",
     "deployment_date": "2025-09-26 12:13:36",
     "files_ready": true,
     "optimization_status": "Production Ready",
@@ -24,7 +24,7 @@
       "Security headers configured"
     ],
     "ready_for": [
-      "fitfriendsclub.com deployment",
+      "fitfriendsclubs.com deployment",
       "Professional business use",
       "Mobile and desktop users",
       "Search engine optimization",
@@ -32,6 +32,6 @@
     ]
   },
   "recommended_host": "Netlify",
-  "domain": "fitfriendsclub.com",
+  "domain": "fitfriendsclubs.com",
   "status": "Ready for deployment"
 }

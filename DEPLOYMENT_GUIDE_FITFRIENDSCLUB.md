@@ -1,11 +1,11 @@
 # FitFriendsClub Deployment Guide
-## Live Website Deployment to fitfriendsclub.com
+## Live Website Deployment to fitfriendsclubs.com
 
 ### 🎯 **Deployment Overview**
-Deploy the enhanced FitFriendsClub website with promotional campaign to fitfriendsclub.com using Netlify for professional hosting with CDN, HTTPS, and form handling.
+Deploy the enhanced FitFriendsClub website with promotional campaign to fitfriendsclubs.com using Netlify for professional hosting with CDN, HTTPS, and form handling.
 
 ### 📋 **Pre-Deployment Checklist**
-- ✅ Domain registered: fitfriendsclub.com
+- ✅ Domain registered: fitfriendsclubs.com
 - ✅ Website files optimized: 120KB deployment package
 - ✅ Promotional campaign integrated
 - ✅ Mobile-responsive design verified
@@ -25,7 +25,7 @@ Deploy the enhanced FitFriendsClub website with promotional campaign to fitfrien
 
 2. **Configure Domain**
    - Site settings → Domain management
-   - Add custom domain: `fitfriendsclub.com`
+   - Add custom domain: `fitfriendsclubs.com`
    - Configure DNS at your domain registrar:
      ```
      Type: CNAME
@@ -81,7 +81,7 @@ Deploy the enhanced FitFriendsClub website with promotional campaign to fitfrien
 #### **Form Handling Setup**
 Forms are automatically handled by Netlify. Configure notifications:
 - Site settings → Forms → Form notifications
-- Add email: hello@fitfriendsclub.com
+- Add email: hello@fitfriendsclubs.com
 - Enable Slack integration (optional)
 
 ### 📧 **Email Configuration**
@@ -133,7 +133,7 @@ Monitor membership signups and promotional campaign effectiveness:
 ### 🎯 **Launch Verification Checklist**
 
 #### **Technical Verification**
-- [ ] Website loads at fitfriendsclub.com
+- [ ] Website loads at fitfriendsclubs.com
 - [ ] HTTPS certificate active
 - [ ] Mobile responsive on all devices
 - [ ] All interactive elements functional
@@ -193,4 +193,4 @@ Your FitFriendsClub website is production-ready with:
 - **Mobile-responsive experience**
 - **SEO optimized content**
 
-**Next step:** Follow deployment option 1 or 2 above to go live at fitfriendsclub.com!
+**Next step:** Follow deployment option 1 or 2 above to go live at fitfriendsclubs.com!

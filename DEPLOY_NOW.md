@@ -9,7 +9,7 @@
 3. **Get URL:** Netlify provides temporary URL like `amazing-name-123456.netlify.app`
 4. **Add Domain:** 
    - Site Settings → Domain Management
-   - Add custom domain: `fitfriendsclub.com`
+   - Add custom domain: `fitfriendsclubs.com`
    - Follow DNS instructions
 
 ### **🎯 OPTION 2: Netlify Git Integration (Best for Long-term)**
@@ -20,7 +20,7 @@
    - Branch: `main`
    - Build directory: `src/fitness_mcp/fitness app/fitness app2.0/fitness app 3.0/website`
 3. **Deploy:** Automatic deployment on every git push
-4. **Custom Domain:** Add fitfriendsclub.com in settings
+4. **Custom Domain:** Add fitfriendsclubs.com in settings
 
 ### **🎯 OPTION 3: Automated Script (Advanced)**
 Run our deployment script:
@@ -39,7 +39,7 @@ Run our deployment script:
 - `netlify.toml` - Configuration for security and performance
 
 ### **🔧 DNS Configuration**
-At your domain registrar (where you bought fitfriendsclub.com):
+At your domain registrar (where you bought fitfriendsclubs.com):
 
 ```
 Type: A
@@ -54,14 +54,14 @@ Value: [your-netlify-site].netlify.app
 ### **📧 Email Setup (After Deployment)**
 1. **Choose Provider:** Google Workspace ($6/month) or Zoho ($1/month)
 2. **Add MX Records** at your domain registrar
-3. **Create:** hello@fitfriendsclub.com
+3. **Create:** hello@fitfriendsclubs.com
 
 ---
 
 ## **🎉 POST-DEPLOYMENT VERIFICATION**
 
 ### **Test These Features:**
-- [ ] Website loads at fitfriendsclub.com
+- [ ] Website loads at fitfriendsclubs.com
 - [ ] "First Month FREE" promotional banner displays
 - [ ] Member signup form works
 - [ ] Sport-specific workout modals open
@@ -81,7 +81,7 @@ Value: [your-netlify-site].netlify.app
 
 **CUSTOM DOMAIN (additional 10 minutes):**
 5. Click "Domain Settings" on Netlify
-6. Add "fitfriendsclub.com" as custom domain
+6. Add "fitfriendsclubs.com" as custom domain
 7. Update DNS at your registrar with provided instructions
 8. Wait 10-60 minutes for DNS propagation
 

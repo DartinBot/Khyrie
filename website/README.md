@@ -1,6 +1,6 @@
 # FitFriendsClub Website
 
-🏆 **Premium fitness community website for fitfriendsclub.com**
+🏆 **Premium fitness community website for fitfriendsclubs.com**
 
 ## 🚀 Quick Start
 
@@ -95,16 +95,16 @@ website/
 ## 🚀 **Deployment Ready**
 
 This website is ready for deployment to:
-- **fitfriendsclub.com** (your domain!)
+- **fitfriendsclubs.com** (your domain!)
 - Netlify, Vercel, or any static hosting
 - Your own server with HTTPS
 
 ## 📧 **Email Setup Needed**
 
 For production, configure:
-- `hello@fitfriendsclub.com`
-- `support@fitfriendsclub.com`
-- `business@fitfriendsclub.com`
+- `hello@fitfriendsclubs.com`
+- `support@fitfriendsclubs.com`
+- `business@fitfriendsclubs.com`
 
 ## 🎉 **What You've Accomplished**
 
@@ -121,5 +121,5 @@ For production, configure:
 ---
 
 **Built for:** Khyrie3.0 Fitness Platform  
-**Domain:** fitfriendsclub.com  
+**Domain:** fitfriendsclubs.com  
 **Brand:** Premium fitness community focused on friendship and accountability

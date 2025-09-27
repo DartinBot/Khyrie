@@ -1,6 +1,6 @@
 {
   "launch_date": "2025-09-26T13:52:08.605381",
-  "domain": "fitfriendsclub.com",
+  "domain": "fitfriendsclubs.com",
   "platform_valuation": "$8.5M - $25M",
   "deployment_method": "Netlify (Recommended)",
   "launch_time_estimate": "5 minutes",
@@ -14,7 +14,7 @@
       "\u2705 Test from different browsers"
     ],
     "first_week": [
-      "\ud83d\udce7 Set up hello@fitfriendsclub.com email",
+      "\ud83d\udce7 Set up hello@fitfriendsclubs.com email",
       "\ud83d\udcca Install Google Analytics",
       "\ud83d\udd0d Submit to Google Search Console",
       "\ud83d\udcf1 Create social media accounts",

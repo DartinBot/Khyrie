@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # FitFriendsClub Deployment Script
-# Automated deployment to fitfriendsclub.com via Netlify
+# Automated deployment to fitfriendsclubs.com via Netlify
 
 set -e  # Exit on any error
 
@@ -17,7 +17,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 SITE_NAME="fitfriendsclub"
-DOMAIN="fitfriendsclub.com"
+DOMAIN="fitfriendsclubs.com"
 BUILD_DIR="website"
 REPO_URL="https://github.com/DartinBot/Khyrie"
 
@@ -94,7 +94,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     # Display next steps
     echo -e "${BLUE}📋 Next Steps:${NC}"
     echo "1. Configure custom domain (if not done already)"
-    echo "2. Set up email forwarding: hello@fitfriendsclub.com"
+    echo "2. Set up email forwarding: hello@fitfriendsclubs.com"
     echo "3. Configure form notifications"
     echo "4. Set up analytics (Google Analytics recommended)"
     echo "5. Test all functionality on live site"

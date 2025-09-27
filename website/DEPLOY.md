@@ -20,11 +20,11 @@ Your FitFriendsClub website is **production-ready**! Here's the fastest way to g
 4. **Add Your Custom Domain**:
    - In Netlify: Go to Site Settings → Domain Management
    - Click "Add custom domain"
-   - Enter: `fitfriendsclub.com`
+   - Enter: `fitfriendsclubs.com`
    - Click "Verify DNS configuration"
 
 5. **Update Your DNS Settings**:
-   - Go to your domain registrar (where you bought fitfriendsclub.com)
+   - Go to your domain registrar (where you bought fitfriendsclubs.com)
    - Add these DNS records:
      ```
      Type: A Record | Name: @ | Value: 75.2.60.5
@@ -34,17 +34,17 @@ Your FitFriendsClub website is **production-ready**! Here's the fastest way to g
 
 6. **Enable HTTPS** (Automatic):
    - Netlify automatically provides FREE SSL certificates
-   - Your site will be secure with `https://fitfriendsclub.com` 🔒
+   - Your site will be secure with `https://fitfriendsclubs.com` 🔒
 
 7. **Test Your Live Site**:
-   - Visit `https://fitfriendsclub.com`
+   - Visit `https://fitfriendsclubs.com`
    - Test all features (signup modal, contact form, mobile responsiveness)
    - 🎉 **YOU'RE LIVE!**
 
 ## 🌟 What You'll Have Live:
 
 ✅ **Premium Website**: Professional fitness community site  
-✅ **Perfect Domain**: fitfriendsclub.com with HTTPS  
+✅ **Perfect Domain**: fitfriendsclubs.com with HTTPS  
 ✅ **Global CDN**: Fast loading worldwide  
 ✅ **Mobile Optimized**: Works perfectly on all devices  
 ✅ **Interactive Features**: Membership signup, contact forms  
@@ -84,7 +84,7 @@ After going live, test these features:
 ## 🎯 Next Steps After Deployment:
 
 1. **Set up Google Analytics** for traffic tracking
-2. **Configure email addresses** (hello@fitfriendsclub.com)
+2. **Configure email addresses** (hello@fitfriendsclubs.com)
 3. **Connect contact forms** to email notifications
 4. **Social media setup** (@FitFriendsClub handles)
 5. **Submit to search engines** for indexing
