@@ -19,8 +19,129 @@ CORS(app)
 
 # Database configuration
 DATABASE_PATH = 'fitfriendsclub.db'
+DATABASE_URL = os.environ.get('DATABASE_URL', f'sqlite:///{DATABASE_PATH}')
+
+# Check if we should use PostgreSQL (for production) or SQLite (for development)
+USE_POSTGRESQL = DATABASE_URL.startswith('postgres')
+
+if USE_POSTGRESQL:
+    try:
+        import psycopg2
+        from urllib.parse import urlparse
+        POSTGRES_AVAILABLE = True
+    except ImportError:
+        print("⚠️  PostgreSQL requested but psycopg2 not available, falling back to SQLite")
+        POSTGRES_AVAILABLE = False
+        USE_POSTGRESQL = False
+else:
+    POSTGRES_AVAILABLE = False
+
+def get_db_connection():
+    """Get database connection based on environment"""
+    if USE_POSTGRESQL and POSTGRES_AVAILABLE:
+        # Parse DATABASE_URL for PostgreSQL
+        url = urlparse(DATABASE_URL)
+        return psycopg2.connect(
+            database=url.path[1:],
+            user=url.username,
+            password=url.password,
+            host=url.hostname,
+            port=url.port
+        )
+    else:
+        return sqlite3.connect(DATABASE_PATH)
 
 def init_database():
+    """Initialize database with required tables"""
+    if USE_POSTGRESQL and POSTGRES_AVAILABLE:
+        init_postgresql_database()
+    else:
+        init_sqlite_database()
+
+def init_postgresql_database():
+    """Initialize PostgreSQL database with required tables"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Users table (PostgreSQL syntax)
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            username VARCHAR(50) UNIQUE NOT NULL,
+            email VARCHAR(100) UNIQUE NOT NULL,
+            password_hash VARCHAR(255) NOT NULL,
+            full_name VARCHAR(100) NOT NULL,
+            fitness_goal VARCHAR(50),
+            experience_level VARCHAR(20),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            is_active BOOLEAN DEFAULT TRUE
+        )
+    ''')
+    
+    # Workouts table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workouts (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            title VARCHAR(100) NOT NULL,
+            description TEXT,
+            sport_type VARCHAR(50),
+            duration_minutes INTEGER,
+            calories_burned INTEGER,
+            workout_date DATE NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Workout partners/friends table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS friendships (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            friend_id INTEGER NOT NULL,
+            status VARCHAR(20) DEFAULT 'pending',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (friend_id) REFERENCES users (id),
+            UNIQUE(user_id, friend_id)
+        )
+    ''')
+    
+    # Group workouts table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS group_workouts (
+            id SERIAL PRIMARY KEY,
+            organizer_id INTEGER NOT NULL,
+            title VARCHAR(100) NOT NULL,
+            description TEXT,
+            sport_type VARCHAR(50),
+            max_participants INTEGER DEFAULT 10,
+            workout_datetime TIMESTAMP NOT NULL,
+            location VARCHAR(200),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (organizer_id) REFERENCES users (id)
+        )
+    ''')
+    
+    # Group workout participants
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS group_workout_participants (
+            id SERIAL PRIMARY KEY,
+            group_workout_id INTEGER NOT NULL,
+            user_id INTEGER NOT NULL,
+            joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (group_workout_id) REFERENCES group_workouts (id),
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            UNIQUE(group_workout_id, user_id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+    print("✅ PostgreSQL database initialized successfully!")
+
+def init_sqlite_database():
     """Initialize SQLite database with required tables"""
     conn = sqlite3.connect(DATABASE_PATH)
     cursor = conn.cursor()
@@ -168,25 +289,45 @@ def register():
             return jsonify({'error': f'{field} is required'}), 400
     
     # Check if user already exists
-    conn = sqlite3.connect(DATABASE_PATH)
+    conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute('SELECT id FROM users WHERE username = ? OR email = ?', 
-                  (data['username'], data['email']))
-    if cursor.fetchone():
-        conn.close()
-        return jsonify({'error': 'User already exists'}), 400
+    if USE_POSTGRESQL and POSTGRES_AVAILABLE:
+        cursor.execute('SELECT id FROM users WHERE username = %s OR email = %s', 
+                      (data['username'], data['email']))
+        result = cursor.fetchone()
+        if result:
+            conn.close()
+            return jsonify({'error': 'User already exists'}), 400
+        
+        # Create new user
+        password_hash = hash_password(data['password'])
+        
+        cursor.execute('''
+            INSERT INTO users (username, email, password_hash, full_name, fitness_goal, experience_level)
+            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id
+        ''', (data['username'], data['email'], password_hash, data['full_name'], 
+              data['fitness_goal'], data['experience_level']))
+        
+        user_id = cursor.fetchone()[0]
+    else:
+        cursor.execute('SELECT id FROM users WHERE username = ? OR email = ?', 
+                      (data['username'], data['email']))
+        if cursor.fetchone():
+            conn.close()
+            return jsonify({'error': 'User already exists'}), 400
+        
+        # Create new user
+        password_hash = hash_password(data['password'])
+        
+        cursor.execute('''
+            INSERT INTO users (username, email, password_hash, full_name, fitness_goal, experience_level)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (data['username'], data['email'], password_hash, data['full_name'], 
+              data['fitness_goal'], data['experience_level']))
+        
+        user_id = cursor.lastrowid
     
-    # Create new user
-    password_hash = hash_password(data['password'])
-    
-    cursor.execute('''
-        INSERT INTO users (username, email, password_hash, full_name, fitness_goal, experience_level)
-        VALUES (?, ?, ?, ?, ?, ?)
-    ''', (data['username'], data['email'], password_hash, data['full_name'], 
-          data['fitness_goal'], data['experience_level']))
-    
-    user_id = cursor.lastrowid
     conn.commit()
     conn.close()
     
