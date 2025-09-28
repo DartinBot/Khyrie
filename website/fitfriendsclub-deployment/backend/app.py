@@ -31,7 +31,7 @@ USE_POSTGRESQL = DATABASE_URL.startswith('postgres')
 
 if USE_POSTGRESQL:
     try:
-        import psycopg2
+        import psycopg2  # type: ignore[import-untyped] - Optional dependency for PostgreSQL
         from urllib.parse import urlparse
         POSTGRES_AVAILABLE = True
     except ImportError:
@@ -544,33 +544,34 @@ def group_workouts(current_user_id, current_username):
         return jsonify({'group_workouts': group_workouts})
     
     elif request.method == 'POST':
-        data = request.get_json()
-        
-        required_fields = ['title', 'sport_type', 'workout_datetime']
-        for field in required_fields:
-            if field not in data:
-                return jsonify({'error': f'{field} is required'}), 400
-        
-        cursor.execute('''
-            INSERT INTO group_workouts (organizer_id, title, description, sport_type,
-                                      max_participants, workout_datetime, location)
-            VALUES (?, ?, ?, ?, ?, ?, ?)
-        ''', (current_user_id, data['title'], data.get('description', ''),
-              data['sport_type'], data.get('max_participants', 10),
-              data['workout_datetime'], data.get('location', '')))
-        
-        group_workout_id = cursor.lastrowid
-        conn.commit()
-        conn.close()
-        
-        return jsonify({
-            'message': 'Group workout created successfully!',
-            'group_workout_id': group_workout_id
-        }), 201
-    
-    except Exception as e:
-        print(f"Error creating group workout: {str(e)}")
-        return jsonify({'error': 'Failed to create group workout'}), 500
+        try:
+            data = request.get_json()
+            
+            required_fields = ['title', 'sport_type', 'workout_datetime']
+            for field in required_fields:
+                if field not in data:
+                    return jsonify({'error': f'{field} is required'}), 400
+            
+            cursor.execute('''
+                INSERT INTO group_workouts (organizer_id, title, description, sport_type,
+                                          max_participants, workout_datetime, location)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (current_user_id, data['title'], data.get('description', ''),
+                  data['sport_type'], data.get('max_participants', 10),
+                  data['workout_datetime'], data.get('location', '')))
+            
+            group_workout_id = cursor.lastrowid
+            conn.commit()
+            conn.close()
+            
+            return jsonify({
+                'message': 'Group workout created successfully!',
+                'group_workout_id': group_workout_id
+            }), 201
+            
+        except Exception as e:
+            print(f"Error creating group workout: {str(e)}")
+            return jsonify({'error': 'Failed to create group workout'}), 500
 
 
 # ===================================
@@ -578,11 +579,10 @@ def group_workouts(current_user_id, current_username):
 # ===================================
 
 @app.route('/api/upload-profile-image', methods=['POST'])
-@require_auth
-def upload_profile_image():
+@token_required
+def upload_profile_image(current_user_id, current_username):
     """Upload and process profile picture"""
     try:
-        current_user_id = request.current_user_id
         
         # Check if image file is present
         if 'image' not in request.files:
@@ -648,11 +648,10 @@ def upload_profile_image():
 
 
 @app.route('/api/upload-workout-photo', methods=['POST'])
-@require_auth
-def upload_workout_photo():
+@token_required
+def upload_workout_photo(current_user_id, current_username):
     """Upload and process workout/progress photo"""
     try:
-        current_user_id = request.current_user_id
         
         # Check if image file is present
         if 'image' not in request.files:
@@ -714,11 +713,10 @@ def upload_workout_photo():
 
 
 @app.route('/api/create-progress-comparison', methods=['POST'])
-@require_auth
-def create_progress_comparison():
+@token_required
+def create_progress_comparison(current_user_id, current_username):
     """Create before/after progress comparison image"""
     try:
-        current_user_id = request.current_user_id
         
         # Check if both image files are present
         if 'before_image' not in request.files or 'after_image' not in request.files:
@@ -792,11 +790,10 @@ def serve_image(filename):
 
 
 @app.route('/api/user-photos')
-@require_auth
-def get_user_photos():
+@token_required
+def get_user_photos(current_user_id, current_username):
     """Get all photos for current user"""
     try:
-        current_user_id = request.current_user_id
         
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -832,11 +829,10 @@ def get_user_photos():
 
 
 @app.route('/api/delete-photo/<int:photo_id>', methods=['DELETE'])
-@require_auth
-def delete_photo(photo_id):
+@token_required
+def delete_photo(current_user_id, current_username, photo_id):
     """Delete a user's photo"""
     try:
-        current_user_id = request.current_user_id
         
         conn = get_db_connection()
         cursor = conn.cursor()

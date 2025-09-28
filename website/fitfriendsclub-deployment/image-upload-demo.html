@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitFriendsClub - Image Upload Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: #666;
+        }
+
+        .upload-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px dashed #ddd;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .upload-section.active {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .upload-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            margin-bottom: 15px;
+        }
+
+        .file-input input[type="file"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            width: 100%;
+            max-width: 300px;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px;
+            transition: transform 0.2s;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .upload-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .preview-img {
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 10px;
+        }
+
+        .result {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        .result.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .result.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .comparison-inputs {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .comparison-input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .auth-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .auth-input {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 5px 10px;
+            width: 200px;
+        }
+
+        .token-display {
+            background: #e9ecef;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            font-family: monospace;
+            font-size: 12px;
+            word-break: break-all;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🖼️ FitFriendsClub Image Processing Demo</h1>
+            <p>Test the comprehensive image processing system with profile pictures, workout photos, and progress comparisons</p>
+        </div>
+
+        <!-- Authentication Section -->
+        <div class="auth-section">
+            <h3>🔐 Authentication</h3>
+            <p>First, log in to test the image upload features:</p>
+            <input type="text" id="username" class="auth-input" placeholder="Username" value="testuser">
+            <input type="password" id="password" class="auth-input" placeholder="Password" value="testpass123">
+            <button onclick="login()" class="upload-btn">Login</button>
+            <button onclick="register()" class="upload-btn">Register</button>
+            <div id="authResult" class="result" style="display: none;"></div>
+            <div id="tokenDisplay" class="token-display" style="display: none;"></div>
+        </div>
+
+        <!-- Profile Image Upload -->
+        <div class="upload-section" id="profileSection">
+            <h3>👤 Profile Picture Upload</h3>
+            <p>Upload your profile picture (will be resized to 200x200px)</p>
+            <div class="file-input">
+                <input type="file" id="profileImage" accept="image/*" onchange="previewImage(this, 'profilePreview')">
+            </div>
+            <button onclick="uploadProfileImage()" class="upload-btn">Upload Profile Picture</button>
+            <div id="profileResult" class="result" style="display: none;"></div>
+            <div id="profilePreview" class="preview-section"></div>
+        </div>
+
+        <!-- Workout Photo Upload -->
+        <div class="upload-section" id="workoutSection">
+            <h3>💪 Workout Photo Upload</h3>
+            <p>Upload workout or progress photos (automatically watermarked)</p>
+            <div class="file-input">
+                <input type="file" id="workoutImage" accept="image/*" onchange="previewImage(this, 'workoutPreview')">
+            </div>
+            <label>
+                <input type="checkbox" id="addWatermark" checked> Add FitFriendsClub watermark
+            </label>
+            <br>
+            <select id="photoType">
+                <option value="workout">Workout Photo</option>
+                <option value="progress">Progress Photo</option>
+                <option value="before">Before Photo</option>
+                <option value="after">After Photo</option>
+            </select>
+            <br>
+            <button onclick="uploadWorkoutPhoto()" class="upload-btn">Upload Workout Photo</button>
+            <div id="workoutResult" class="result" style="display: none;"></div>
+            <div id="workoutPreview" class="preview-section"></div>
+        </div>
+
+        <!-- Progress Comparison -->
+        <div class="upload-section" id="comparisonSection">
+            <h3>📊 Progress Comparison</h3>
+            <p>Create before/after comparison images</p>
+            <div class="comparison-inputs">
+                <div class="comparison-input">
+                    <label>Before Image:</label>
+                    <input type="file" id="beforeImage" accept="image/*" onchange="previewImage(this, 'beforePreview')">
+                    <div id="beforePreview" class="preview-section"></div>
+                </div>
+                <div class="comparison-input">
+                    <label>After Image:</label>
+                    <input type="file" id="afterImage" accept="image/*" onchange="previewImage(this, 'afterPreview')">
+                    <div id="afterPreview" class="preview-section"></div>
+                </div>
+            </div>
+            <button onclick="createProgressComparison()" class="upload-btn">Create Comparison</button>
+            <div id="comparisonResult" class="result" style="display: none;"></div>
+        </div>
+
+        <!-- User Photos Gallery -->
+        <div class="upload-section" id="gallerySection">
+            <h3>🖼️ Your Photo Gallery</h3>
+            <button onclick="loadUserPhotos()" class="upload-btn">Load My Photos</button>
+            <div id="galleryResult" class="result" style="display: none;"></div>
+            <div id="photoGallery" class="preview-section"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:5000/api';
+        let authToken = null;
+
+        // Authentication functions
+        async function register() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password,
+                        email: `${username}@test.com`,
+                        full_name: `Test User ${username}`,
+                        fitness_goal: 'lose weight',
+                        experience_level: 'beginner'
+                    })
+                });
+
+                const data = await response.json();
+                showResult('authResult', data.message || data.error, response.ok);
+                
+                if (response.ok) {
+                    // Auto login after registration
+                    setTimeout(login, 1000);
+                }
+            } catch (error) {
+                showResult('authResult', 'Registration failed: ' + error.message, false);
+            }
+        }
+
+        async function login() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        username: username,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.token;
+                    showResult('authResult', 'Login successful! ✅', true);
+                    document.getElementById('tokenDisplay').style.display = 'block';
+                    document.getElementById('tokenDisplay').textContent = `Token: ${authToken.substring(0, 50)}...`;
+                } else {
+                    showResult('authResult', data.error || 'Login failed', false);
+                }
+            } catch (error) {
+                showResult('authResult', 'Login failed: ' + error.message, false);
+            }
+        }
+
+        // Image preview function
+        function previewImage(input, previewId) {
+            const preview = document.getElementById(previewId);
+            preview.innerHTML = '';
+            
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = document.createElement('img');
+                    img.src = e.target.result;
+                    img.className = 'preview-img';
+                    preview.appendChild(img);
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Upload functions
+        async function uploadProfileImage() {
+            if (!authToken) {
+                showResult('profileResult', 'Please login first!', false);
+                return;
+            }
+
+            const fileInput = document.getElementById('profileImage');
+            if (!fileInput.files[0]) {
+                showResult('profileResult', 'Please select an image!', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+
+            try {
+                const response = await fetch(`${API_BASE}/upload-profile-image`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                showResult('profileResult', data.message || data.error, response.ok);
+                
+                if (response.ok) {
+                    // Show processed image
+                    const processedImg = document.createElement('img');
+                    processedImg.src = `${API_BASE}/images/${data.profile_image}`;
+                    processedImg.className = 'preview-img';
+                    processedImg.alt = 'Processed Profile Image';
+                    
+                    const preview = document.getElementById('profilePreview');
+                    preview.innerHTML = '<h4>Processed Profile Image:</h4>';
+                    preview.appendChild(processedImg);
+                }
+            } catch (error) {
+                showResult('profileResult', 'Upload failed: ' + error.message, false);
+            }
+        }
+
+        async function uploadWorkoutPhoto() {
+            if (!authToken) {
+                showResult('workoutResult', 'Please login first!', false);
+                return;
+            }
+
+            const fileInput = document.getElementById('workoutImage');
+            if (!fileInput.files[0]) {
+                showResult('workoutResult', 'Please select an image!', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('image', fileInput.files[0]);
+            formData.append('watermark', document.getElementById('addWatermark').checked);
+            formData.append('type', document.getElementById('photoType').value);
+
+            try {
+                const response = await fetch(`${API_BASE}/upload-workout-photo`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                showResult('workoutResult', data.message || data.error, response.ok);
+                
+                if (response.ok) {
+                    // Show processed image
+                    const processedImg = document.createElement('img');
+                    processedImg.src = `${API_BASE}/images/${data.image_path}`;
+                    processedImg.className = 'preview-img';
+                    processedImg.alt = 'Processed Workout Photo';
+                    
+                    const preview = document.getElementById('workoutPreview');
+                    preview.innerHTML = '<h4>Processed Workout Photo:</h4>';
+                    preview.appendChild(processedImg);
+                }
+            } catch (error) {
+                showResult('workoutResult', 'Upload failed: ' + error.message, false);
+            }
+        }
+
+        async function createProgressComparison() {
+            if (!authToken) {
+                showResult('comparisonResult', 'Please login first!', false);
+                return;
+            }
+
+            const beforeInput = document.getElementById('beforeImage');
+            const afterInput = document.getElementById('afterImage');
+            
+            if (!beforeInput.files[0] || !afterInput.files[0]) {
+                showResult('comparisonResult', 'Please select both before and after images!', false);
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('before_image', beforeInput.files[0]);
+            formData.append('after_image', afterInput.files[0]);
+
+            try {
+                const response = await fetch(`${API_BASE}/create-progress-comparison`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                showResult('comparisonResult', data.message || data.error, response.ok);
+                
+                if (response.ok) {
+                    // Show comparison image
+                    const comparisonImg = document.createElement('img');
+                    comparisonImg.src = `${API_BASE}/images/${data.image_path}`;
+                    comparisonImg.style.maxWidth = '100%';
+                    comparisonImg.style.borderRadius = '10px';
+                    comparisonImg.alt = 'Progress Comparison';
+                    
+                    const result = document.getElementById('comparisonResult');
+                    result.appendChild(document.createElement('br'));
+                    result.appendChild(comparisonImg);
+                }
+            } catch (error) {
+                showResult('comparisonResult', 'Comparison creation failed: ' + error.message, false);
+            }
+        }
+
+        async function loadUserPhotos() {
+            if (!authToken) {
+                showResult('galleryResult', 'Please login first!', false);
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/user-photos`, {
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`
+                    }
+                });
+
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showResult('galleryResult', `Found ${data.photos.length} photos`, true);
+                    
+                    const gallery = document.getElementById('photoGallery');
+                    gallery.innerHTML = '<h4>Your Photos:</h4>';
+                    
+                    data.photos.forEach(photo => {
+                        const photoDiv = document.createElement('div');
+                        photoDiv.style.display = 'inline-block';
+                        photoDiv.style.margin = '10px';
+                        photoDiv.style.textAlign = 'center';
+                        
+                        const img = document.createElement('img');
+                        img.src = photo.thumbnail_url;
+                        img.className = 'preview-img';
+                        img.onclick = () => window.open(photo.image_url, '_blank');
+                        img.style.cursor = 'pointer';
+                        
+                        const label = document.createElement('div');
+                        label.textContent = `${photo.photo_type} (${new Date(photo.created_at).toLocaleDateString()})`;
+                        label.style.fontSize = '12px';
+                        label.style.marginTop = '5px';
+                        
+                        photoDiv.appendChild(img);
+                        photoDiv.appendChild(label);
+                        gallery.appendChild(photoDiv);
+                    });
+                } else {
+                    showResult('galleryResult', data.error || 'Failed to load photos', false);
+                }
+            } catch (error) {
+                showResult('galleryResult', 'Failed to load photos: ' + error.message, false);
+            }
+        }
+
+        // Utility function
+        function showResult(elementId, message, isSuccess) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `result ${isSuccess ? 'success' : 'error'}`;
+            element.style.display = 'block';
+        }
+
+        // Auto-hide results after 5 seconds
+        setInterval(() => {
+            document.querySelectorAll('.result').forEach(el => {
+                if (el.style.display === 'block' && !el.textContent.includes('Found')) {
+                    setTimeout(() => {
+                        el.style.display = 'none';
+                    }, 5000);
+                }
+            });
+        }, 1000);
+    </script>
+</body>
+</html>
