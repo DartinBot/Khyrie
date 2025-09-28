@@ -6,7 +6,7 @@ JWT Implementation: Uses python-jose for enhanced security and JOSE compliance
 Database: Hybrid SQLite/PostgreSQL system for development/production flexibility
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import sqlite3
@@ -15,6 +15,8 @@ from jose import jwt, JWTError
 import datetime
 from functools import wraps
 import json
+from werkzeug.utils import secure_filename
+from image_utils import ImageProcessor, save_image_to_disk, delete_image_file
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'fitfriendsclub-secret-key-2025')
@@ -76,7 +78,10 @@ def init_postgresql_database():
             full_name VARCHAR(100) NOT NULL,
             fitness_goal VARCHAR(50),
             experience_level VARCHAR(20),
+            profile_image VARCHAR(255),
+            profile_thumbnail VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             is_active BOOLEAN DEFAULT TRUE
         )
     ''')
@@ -140,6 +145,21 @@ def init_postgresql_database():
         )
     ''')
     
+    # Workout photos table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_photos (
+            id SERIAL PRIMARY KEY,
+            user_id INTEGER NOT NULL,
+            workout_id INTEGER,
+            photo_type VARCHAR(50) NOT NULL,
+            image_path VARCHAR(255) NOT NULL,
+            thumbnail_path VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (workout_id) REFERENCES workouts (id)
+        )
+    ''')
+    
     conn.commit()
     conn.close()
     print("✅ PostgreSQL database initialized successfully!")
@@ -159,7 +179,10 @@ def init_sqlite_database():
             full_name VARCHAR(100) NOT NULL,
             fitness_goal VARCHAR(50),
             experience_level VARCHAR(20),
+            profile_image VARCHAR(255),
+            profile_thumbnail VARCHAR(255),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             is_active BOOLEAN DEFAULT 1
         )
     ''')
@@ -220,6 +243,21 @@ def init_sqlite_database():
             FOREIGN KEY (group_workout_id) REFERENCES group_workouts (id),
             FOREIGN KEY (user_id) REFERENCES users (id),
             UNIQUE(group_workout_id, user_id)
+        )
+    ''')
+    
+    # Workout photos table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS workout_photos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            workout_id INTEGER,
+            photo_type VARCHAR(50) NOT NULL,
+            image_path VARCHAR(255) NOT NULL,
+            thumbnail_path VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users (id),
+            FOREIGN KEY (workout_id) REFERENCES workouts (id)
         )
     ''')
     
@@ -529,6 +567,310 @@ def group_workouts(current_user_id, current_username):
             'message': 'Group workout created successfully!',
             'group_workout_id': group_workout_id
         }), 201
+    
+    except Exception as e:
+        print(f"Error creating group workout: {str(e)}")
+        return jsonify({'error': 'Failed to create group workout'}), 500
+
+
+# ===================================
+# IMAGE PROCESSING ENDPOINTS
+# ===================================
+
+@app.route('/api/upload-profile-image', methods=['POST'])
+@require_auth
+def upload_profile_image():
+    """Upload and process profile picture"""
+    try:
+        current_user_id = request.current_user_id
+        
+        # Check if image file is present
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No image file selected'}), 400
+        
+        # Read and validate image
+        image_data = file.read()
+        is_valid, message = ImageProcessor.validate_image(image_data)
+        
+        if not is_valid:
+            return jsonify({'error': message}), 400
+        
+        # Process profile image
+        processed_image = ImageProcessor.resize_profile_image(image_data)
+        thumbnail = ImageProcessor.create_thumbnail(image_data)
+        
+        # Generate filenames
+        profile_filename = ImageProcessor.generate_filename(current_user_id, "profile")
+        thumbnail_filename = ImageProcessor.generate_filename(current_user_id, "profile_thumb")
+        
+        # Save processed images
+        profile_path = save_image_to_disk(processed_image, profile_filename)
+        thumbnail_path = save_image_to_disk(thumbnail, thumbnail_filename)
+        
+        # Update user record with image paths
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get old profile image to delete it
+        cursor.execute('SELECT profile_image, profile_thumbnail FROM users WHERE id = ?', (current_user_id,))
+        old_images = cursor.fetchone()
+        
+        # Update with new image paths
+        cursor.execute('''
+            UPDATE users 
+            SET profile_image = ?, profile_thumbnail = ?, updated_at = CURRENT_TIMESTAMP 
+            WHERE id = ?
+        ''', (profile_filename, thumbnail_filename, current_user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        # Delete old images if they exist
+        if old_images and old_images[0]:
+            delete_image_file(os.path.join("uploads", old_images[0]))
+        if old_images and old_images[1]:
+            delete_image_file(os.path.join("uploads", old_images[1]))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Profile image updated successfully',
+            'profile_image': profile_filename,
+            'thumbnail': thumbnail_filename
+        })
+        
+    except Exception as e:
+        print(f"Error uploading profile image: {str(e)}")
+        return jsonify({'error': 'Failed to upload profile image'}), 500
+
+
+@app.route('/api/upload-workout-photo', methods=['POST'])
+@require_auth
+def upload_workout_photo():
+    """Upload and process workout/progress photo"""
+    try:
+        current_user_id = request.current_user_id
+        
+        # Check if image file is present
+        if 'image' not in request.files:
+            return jsonify({'error': 'No image file provided'}), 400
+        
+        file = request.files['image']
+        if file.filename == '':
+            return jsonify({'error': 'No image file selected'}), 400
+        
+        # Get optional parameters
+        add_watermark = request.form.get('watermark', 'true').lower() == 'true'
+        workout_id = request.form.get('workout_id')
+        photo_type = request.form.get('type', 'workout')  # workout, progress, before, after
+        
+        # Read and validate image
+        image_data = file.read()
+        is_valid, message = ImageProcessor.validate_image(image_data)
+        
+        if not is_valid:
+            return jsonify({'error': message}), 400
+        
+        # Process workout photo
+        processed_image = ImageProcessor.process_workout_photo(image_data, add_watermark)
+        thumbnail = ImageProcessor.create_thumbnail(image_data)
+        
+        # Generate filenames
+        photo_filename = ImageProcessor.generate_filename(current_user_id, f"{photo_type}_photo")
+        thumbnail_filename = ImageProcessor.generate_filename(current_user_id, f"{photo_type}_thumb")
+        
+        # Save processed images
+        photo_path = save_image_to_disk(processed_image, photo_filename)
+        thumbnail_path = save_image_to_disk(thumbnail, thumbnail_filename)
+        
+        # Save photo record to database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO workout_photos (user_id, workout_id, photo_type, image_path, 
+                                      thumbnail_path, created_at)
+            VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (current_user_id, workout_id, photo_type, photo_filename, thumbnail_filename))
+        
+        photo_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Workout photo uploaded successfully',
+            'photo_id': photo_id,
+            'image_path': photo_filename,
+            'thumbnail': thumbnail_filename
+        })
+        
+    except Exception as e:
+        print(f"Error uploading workout photo: {str(e)}")
+        return jsonify({'error': 'Failed to upload workout photo'}), 500
+
+
+@app.route('/api/create-progress-comparison', methods=['POST'])
+@require_auth
+def create_progress_comparison():
+    """Create before/after progress comparison image"""
+    try:
+        current_user_id = request.current_user_id
+        
+        # Check if both image files are present
+        if 'before_image' not in request.files or 'after_image' not in request.files:
+            return jsonify({'error': 'Both before and after images are required'}), 400
+        
+        before_file = request.files['before_image']
+        after_file = request.files['after_image']
+        
+        if before_file.filename == '' or after_file.filename == '':
+            return jsonify({'error': 'Both image files must be selected'}), 400
+        
+        # Read and validate images
+        before_data = before_file.read()
+        after_data = after_file.read()
+        
+        for data, name in [(before_data, 'before'), (after_data, 'after')]:
+            is_valid, message = ImageProcessor.validate_image(data)
+            if not is_valid:
+                return jsonify({'error': f'{name.title()} image: {message}'}), 400
+        
+        # Create comparison image
+        comparison_image = ImageProcessor.create_progress_comparison(before_data, after_data)
+        thumbnail = ImageProcessor.create_thumbnail(comparison_image)
+        
+        # Generate filenames
+        comparison_filename = ImageProcessor.generate_filename(current_user_id, "progress_comparison")
+        thumbnail_filename = ImageProcessor.generate_filename(current_user_id, "progress_thumb")
+        
+        # Save images
+        comparison_path = save_image_to_disk(comparison_image, comparison_filename)
+        thumbnail_path = save_image_to_disk(thumbnail, thumbnail_filename)
+        
+        # Save record to database
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            INSERT INTO workout_photos (user_id, photo_type, image_path, 
+                                      thumbnail_path, created_at)
+            VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ''', (current_user_id, 'progress_comparison', comparison_filename, thumbnail_filename))
+        
+        comparison_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'message': 'Progress comparison created successfully',
+            'comparison_id': comparison_id,
+            'image_path': comparison_filename,
+            'thumbnail': thumbnail_filename
+        })
+        
+    except Exception as e:
+        print(f"Error creating progress comparison: {str(e)}")
+        return jsonify({'error': 'Failed to create progress comparison'}), 500
+
+
+@app.route('/api/images/<filename>')
+def serve_image(filename):
+    """Serve uploaded images"""
+    try:
+        # Security check: ensure filename is safe
+        safe_filename = secure_filename(filename)
+        return send_from_directory('uploads', safe_filename)
+        
+    except Exception as e:
+        print(f"Error serving image: {str(e)}")
+        return jsonify({'error': 'Image not found'}), 404
+
+
+@app.route('/api/user-photos')
+@require_auth
+def get_user_photos():
+    """Get all photos for current user"""
+    try:
+        current_user_id = request.current_user_id
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute('''
+            SELECT id, workout_id, photo_type, image_path, thumbnail_path, created_at
+            FROM workout_photos 
+            WHERE user_id = ?
+            ORDER BY created_at DESC
+        ''', (current_user_id,))
+        
+        photos = []
+        for row in cursor.fetchall():
+            photos.append({
+                'id': row[0],
+                'workout_id': row[1],
+                'photo_type': row[2],
+                'image_url': f'/api/images/{row[3]}',
+                'thumbnail_url': f'/api/images/{row[4]}',
+                'created_at': row[5]
+            })
+        
+        conn.close()
+        
+        return jsonify({
+            'success': True,
+            'photos': photos
+        })
+        
+    except Exception as e:
+        print(f"Error getting user photos: {str(e)}")
+        return jsonify({'error': 'Failed to retrieve photos'}), 500
+
+
+@app.route('/api/delete-photo/<int:photo_id>', methods=['DELETE'])
+@require_auth
+def delete_photo(photo_id):
+    """Delete a user's photo"""
+    try:
+        current_user_id = request.current_user_id
+        
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        # Get photo info and verify ownership
+        cursor.execute('''
+            SELECT image_path, thumbnail_path FROM workout_photos 
+            WHERE id = ? AND user_id = ?
+        ''', (photo_id, current_user_id))
+        
+        photo_info = cursor.fetchone()
+        if not photo_info:
+            return jsonify({'error': 'Photo not found or access denied'}), 404
+        
+        # Delete from database
+        cursor.execute('DELETE FROM workout_photos WHERE id = ? AND user_id = ?', 
+                      (photo_id, current_user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        # Delete files from disk
+        delete_image_file(os.path.join("uploads", photo_info[0]))
+        delete_image_file(os.path.join("uploads", photo_info[1]))
+        
+        return jsonify({
+            'success': True,
+            'message': 'Photo deleted successfully'
+        })
+        
+    except Exception as e:
+        print(f"Error deleting photo: {str(e)}")
+        return jsonify({'error': 'Failed to delete photo'}), 500
+
 
 if __name__ == '__main__':
     print("🚀 Initializing FitFriendsClub Backend...")
