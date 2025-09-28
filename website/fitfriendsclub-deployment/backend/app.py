@@ -1,6 +1,9 @@
 """
 FitFriendsClub Backend API
 A Flask-based backend for the fitness community platform
+
+JWT Implementation: Uses python-jose for enhanced security and JOSE compliance
+Database: Hybrid SQLite/PostgreSQL system for development/production flexibility
 """
 
 from flask import Flask, request, jsonify
@@ -8,7 +11,7 @@ from flask_cors import CORS
 import os
 import sqlite3
 import hashlib
-import jwt
+from jose import jwt, JWTError
 import datetime
 from functools import wraps
 import json
@@ -233,11 +236,13 @@ def verify_password(password, hash_password):
     return hashlib.sha256(password.encode()).hexdigest() == hash_password
 
 def generate_token(user_id, username):
-    """Generate JWT token for user authentication"""
+    """Generate JWT token for user authentication using python-jose"""
     payload = {
         'user_id': user_id,
         'username': username,
-        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7)
+        'exp': datetime.datetime.utcnow() + datetime.timedelta(days=7),
+        'iat': datetime.datetime.utcnow(),
+        'iss': 'FitFriendsClub'  # Issuer for better security
     }
     return jwt.encode(payload, app.config['SECRET_KEY'], algorithm='HS256')
 
@@ -259,7 +264,7 @@ def token_required(f):
             current_username = data['username']
         except jwt.ExpiredSignatureError:
             return jsonify({'message': 'Token has expired'}), 401
-        except jwt.InvalidTokenError:
+        except JWTError:
             return jsonify({'message': 'Token is invalid'}), 401
             
         return f(current_user_id, current_username, *args, **kwargs)
