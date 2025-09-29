@@ -24,5 +24,7 @@ gunicorn==23.0.0
 setuptools>=49.0.0
 wheel==0.45.1
 
-# PostgreSQL Support for Production
+# PostgreSQL Support for Production (BINARY ONLY - NO SOURCE COMPILATION)
 psycopg2-binary==2.9.9
+# Explicitly exclude source psycopg2 to prevent compilation attempts
+--only-binary=psycopg2

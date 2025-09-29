@@ -12,8 +12,16 @@
       "value": "1"
     },
     "PIP_NO_CACHE_DIR": {
-      "description": "Disable pip cache to force fresh installs",
+      "description": "Disable pip cache to force fresh installs", 
       "value": "1"
+    },
+    "PIP_PREFER_BINARY": {
+      "description": "Force binary wheels over source compilation",
+      "value": "1"
+    },
+    "PIP_ONLY_BINARY": {
+      "description": "Only install binary wheels, never compile",
+      "value": "psycopg2,psycopg2-binary"
     }
   },
   "formation": {
