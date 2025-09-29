@@ -23,5 +23,8 @@ gunicorn>=23.0.0
 # Development Tools
 black>=24.3.0
 
+# Build Tools
+wheel>=0.45.0
+
 # Optional PostgreSQL Support (install separately if needed)
 # psycopg2-binary>=2.9.0

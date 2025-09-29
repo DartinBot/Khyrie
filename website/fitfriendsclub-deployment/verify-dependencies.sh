@@ -20,6 +20,7 @@ dependencies=(
     "python-multipart:File upload handling"
     "gunicorn:Production WSGI server"
     "black:Code formatting"
+    "wheel:Package building tool"
 )
 
 for dep in "${dependencies[@]}"; do
