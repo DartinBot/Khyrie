@@ -1,30 +1,28 @@
 # Core Flask Dependencies
 flask==3.0.3
-flask-cors>=5.0.0
-werkzeug>=3.0.0
+flask-cors==5.0.0
+werkzeug==3.0.6
 
 # JWT Authentication
-python-jose>=3.4.0
+python-jose==3.4.0
 PyJWT==2.9.0
 
 # Image Processing
-Pillow>=10.3.0
-python-multipart>=0.0.18
+Pillow==10.4.0
+python-multipart==0.0.20
 
 # HTTP Requests
-requests>=2.32.0
+requests==2.32.4
 
 # Environment Configuration
-python-dotenv>=1.0.0
+python-dotenv==1.0.1
 
 # Production Server
-gunicorn>=23.0.0
-
-# Development Tools
-black>=24.3.0
+gunicorn==23.0.0
 
 # Build Tools
-wheel>=0.45.0
+setuptools>=49.0.0
+wheel==0.45.1
 
-# Optional PostgreSQL Support (install separately if needed)
-# psycopg2-binary>=2.9.0
+# Optional PostgreSQL Support (uncomment for production with PostgreSQL)
+# psycopg2-binary==2.9.9
