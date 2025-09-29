@@ -30,24 +30,57 @@ pip install -r backend/requirements-dev.txt
 - Added explicit setuptools for build stability
 - Specified Python runtime version
 
-### 2. Platform-Specific Deployments
+### 2. PostgreSQL PATH Configuration
+
+**If you need pg_config in your build environment:**
+
+#### Automatic Setup
+```bash
+./setup-postgresql-path.sh  # Interactive PATH configuration
+```
+
+#### Manual Setup
+Add PostgreSQL to your PATH in shell configuration:
+
+**For Homebrew PostgreSQL:**
+```bash
+echo 'export PATH="/opt/homebrew/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+**For Postgres.app:**
+```bash
+echo 'export PATH="/Applications/Postgres.app/Contents/Versions/latest/bin:$PATH"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+#### Verify Configuration
+```bash
+which pg_config
+pg_config --version
+```
+
+### 3. Platform-Specific Deployments
 
 #### Railway
 ```bash
 # Uses requirements.txt and runtime.txt automatically
 # Set environment variables in Railway dashboard
+# PostgreSQL: Uses psycopg2-binary (no pg_config needed)
 ```
 
 #### Heroku
 ```bash
-# Add Procfile:
-echo "web: gunicorn --chdir backend app:app" > Procfile
+# Add Procfile (already configured):
+# web: cd backend && gunicorn app:app --bind 0.0.0.0:$PORT
+# PostgreSQL: Uses psycopg2-binary (no pg_config needed)
 ```
 
 #### Render
 ```bash
 # Build Command: pip install -r backend/requirements.txt
 # Start Command: gunicorn --chdir backend app:app
+# PostgreSQL: Uses psycopg2-binary (no pg_config needed)
 ```
 
 #### Docker

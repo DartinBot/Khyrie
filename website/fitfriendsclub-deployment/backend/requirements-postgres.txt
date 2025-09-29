@@ -1,13 +1,22 @@
 # Optional PostgreSQL Dependencies
 # Install these only when you need PostgreSQL support in production
 
-# Use binary wheel to avoid pg_config issues
+# RECOMMENDED: Use binary wheel (no pg_config required)
 psycopg2-binary>=2.9.0
 
-# Installation command:
+# Installation methods:
+
+# Method 1: Binary wheel (recommended for deployment)
 # pip install --only-binary=psycopg2-binary psycopg2-binary
 
-# Alternative for production (if you have PostgreSQL development libraries):
-# brew install postgresql  # On macOS
-# sudo apt-get install postgresql-dev  # On Ubuntu/Debian
+# Method 2: From source (requires pg_config in PATH)
+# ./setup-postgresql-path.sh  # Configure PATH first
 # pip install psycopg2>=2.9.0
+
+# Method 3: Manual PATH setup for pg_config
+# macOS Homebrew: export PATH="/opt/homebrew/bin:$PATH"
+# macOS Postgres.app: export PATH="/Applications/Postgres.app/Contents/Versions/latest/bin:$PATH" 
+# Ubuntu/Debian: sudo apt-get install postgresql-dev
+
+# Automated installation:
+# ./install-postgresql.sh  # Handles all scenarios automatically
