@@ -1,0 +1,9 @@
+# Optional PostgreSQL Dependencies
+# Install these only when you need PostgreSQL support in production
+
+psycopg2-binary>=2.9.0
+
+# Alternative: install PostgreSQL development libraries first
+# brew install postgresql  # On macOS
+# sudo apt-get install postgresql-dev  # On Ubuntu/Debian
+# Then install: psycopg2>=2.9.0
