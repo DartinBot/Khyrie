@@ -1,0 +1,37 @@
+# FLEXIBLE PostgreSQL Requirements - Compatible with older package indices
+# Use this if psycopg2-binary==2.9.10 is not available on deployment platform
+
+# Core Flask Dependencies
+flask==3.0.3
+flask-cors==5.0.0
+werkzeug==3.0.6
+
+# JWT Authentication
+python-jose==3.4.0
+PyJWT==2.9.0
+
+# Image Processing
+Pillow==10.4.0
+python-multipart==0.0.20
+
+# HTTP Requests
+requests==2.32.4
+
+# Environment Configuration
+python-dotenv==1.0.1
+
+# Production Server
+gunicorn==23.0.0
+
+# Build Tools
+setuptools>=49.0.0
+wheel==0.45.1
+
+# PostgreSQL Support - FLEXIBLE VERSION (NO pg_config needed)
+# Allows deployment platform to choose best available version
+psycopg2-binary>=2.9.5,<3.0.0
+
+# Alternative versions if needed (uncomment if above fails):
+# psycopg2-binary==2.9.8  # Very stable
+# psycopg2-binary==2.9.7  # Widely available
+# psycopg2-binary==2.9.5  # Compatible with older platforms

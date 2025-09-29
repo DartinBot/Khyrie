@@ -1,0 +1,35 @@
+# Netlify configuration for FitFriendsClub
+# Optimized to prevent pg_config errors
+
+[build]
+  # Use binary-only requirements to prevent source compilation
+  command = "cd backend && pip install --no-cache-dir --prefer-binary --only-binary=:all: -r requirements-binary-only.txt"
+  
+  # Publish frontend files
+  publish = "."
+  
+[build.environment]
+  # Force binary wheel installation
+  PIP_NO_CACHE_DIR = "1"
+  PIP_PREFER_BINARY = "1"
+  PIP_ONLY_BINARY = "psycopg2,psycopg2-binary"
+  PYTHONDONTWRITEBYTECODE = "1"
+  
+  # Python version
+  PYTHON_VERSION = "3.9"
+
+[functions]
+  # If using Netlify Functions for backend
+  directory = "backend/"
+
+# Redirect for SPA routing (if needed)
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Headers to prevent caching issues
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"

@@ -22,6 +22,10 @@
     "PIP_ONLY_BINARY": {
       "description": "Only install binary wheels, never compile",
       "value": "psycopg2,psycopg2-binary"
+    },
+    "PIP_CONSTRAINT": {
+      "description": "Use constraints file to block source psycopg2",
+      "value": "constraints.txt"
     }
   },
   "formation": {

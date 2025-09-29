@@ -1,3 +1,6 @@
+# BINARY-ONLY REQUIREMENTS - NO SOURCE COMPILATION ALLOWED
+# This file is specifically designed to prevent pg_config errors
+
 # Core Flask Dependencies
 flask==3.0.3
 flask-cors==5.0.0
@@ -24,5 +27,8 @@ gunicorn==23.0.0
 setuptools>=49.0.0
 wheel==0.45.1
 
-# PostgreSQL Support for Production (BINARY ONLY - NO SOURCE COMPILATION)
+# PostgreSQL Support - BINARY ONLY (NO pg_config needed)
 psycopg2-binary==2.9.9
+
+# NOTE: This file contains ONLY psycopg2-binary, never psycopg2
+# If you see pg_config errors, use this file instead of requirements.txt

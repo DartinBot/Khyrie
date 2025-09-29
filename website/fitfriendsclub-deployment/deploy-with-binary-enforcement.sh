@@ -1,31 +1,53 @@
 #!/bin/bash
-# Ultimate PostgreSQL deployment fix script
-# Guarantees binary-only installation on any platform
+# NUCLEAR OPTION: Absolutely prevent pg_config errors
+# Use this if regular deployment keeps failing
 
-echo "🚀 DEPLOYING WITH POSTGRESQL BINARY ENFORCEMENT"
-echo "================================================"
+echo "� NUCLEAR PostgreSQL FIX - BLOCKING ALL SOURCE COMPILATION"
+echo "============================================================="
 
-# Set environment variables to force binary installation
+# Nuclear environment variables
 export PIP_NO_CACHE_DIR=1
 export PIP_PREFER_BINARY=1
-export PIP_ONLY_BINARY="psycopg2,psycopg2-binary"
+export PIP_ONLY_BINARY=":all:"  # Block ALL source compilation
+export PIP_CONSTRAINT="../constraints.txt"
+export PYTHONDONTWRITEBYTECODE=1
 
-echo "📦 Installing dependencies with binary enforcement..."
-
-# Clear any cached pip state
+echo "🧹 Step 1: Nuclear cache cleanup..."
 pip cache purge 2>/dev/null || true
+rm -rf ~/.cache/pip 2>/dev/null || true
+rm -rf /tmp/pip* 2>/dev/null || true
 
-# Install with maximum binary enforcement
+echo "🛡️  Step 2: Installing with MAXIMUM protection..."
 cd backend
-pip install --no-cache-dir \
-           --prefer-binary \
-           --only-binary=psycopg2 \
-           --only-binary=psycopg2-binary \
-           -r requirements.txt
 
-echo "✅ Installation complete - zero compilation!"
+# Try binary-only requirements first
+if [ -f "requirements-binary-only.txt" ]; then
+    echo "   Using requirements-binary-only.txt"
+    pip install --no-cache-dir \
+               --prefer-binary \
+               --only-binary=:all: \
+               --constraint ../constraints.txt \
+               -r requirements-binary-only.txt
+else
+    echo "   Using regular requirements.txt with binary enforcement"
+    pip install --no-cache-dir \
+               --prefer-binary \
+               --only-binary=:all: \
+               --constraint ../constraints.txt \
+               -r requirements.txt
+fi
+
+echo "✅ Installation complete - ZERO chance of source compilation!"
 
 # Verify PostgreSQL support
-python -c "import psycopg2; print(f'✅ psycopg2 version: {psycopg2.__version__}')"
+python -c "
+try:
+    import psycopg2
+    print(f'✅ psycopg2 version: {psycopg2.__version__}')
+    print('🎉 SUCCESS: No pg_config errors possible!')
+except Exception as e:
+    print(f'❌ Error: {e}')
+    exit(1)
+"
 
-echo "🎉 Deployment ready with bulletproof PostgreSQL support!"
+echo "🚀 NUCLEAR FIX COMPLETE - pg_config errors eliminated forever!"

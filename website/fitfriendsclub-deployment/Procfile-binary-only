@@ -1,0 +1,2 @@
+# Alternative Procfile for binary-only installation
+web: cd backend && pip install --no-cache-dir --prefer-binary --constraint ../constraints.txt -r requirements-binary-only.txt && gunicorn app:app --bind 0.0.0.0:$PORT

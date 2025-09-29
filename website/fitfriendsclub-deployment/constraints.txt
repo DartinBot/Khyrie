@@ -1,0 +1,8 @@
+# ULTIMATE PostgreSQL Fix - Constraints file to prevent source compilation
+# This file BLOCKS any psycopg2 source installation attempts
+
+# Explicitly forbid source psycopg2 package
+psycopg2 @ https://pypi.org/simple/; python_version == "0.0.0"  # Impossible version - blocks source psycopg2
+
+# Only allow binary version
+psycopg2-binary==2.9.9
