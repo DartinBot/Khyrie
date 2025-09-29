@@ -1,0 +1,26 @@
+{
+  "name": "FitFriendsClub Backend",
+  "description": "Flask backend for FitFriendsClub fitness community platform",
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "env": {
+    "DISABLE_COLLECTSTATIC": {
+      "description": "Disable Django collectstatic during build",
+      "value": "1"
+    },
+    "PIP_NO_CACHE_DIR": {
+      "description": "Disable pip cache to force fresh installs",
+      "value": "1"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": []
+}
