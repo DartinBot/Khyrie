@@ -38,11 +38,12 @@ done
 echo ""
 echo "🗄️  Database Support:"
 echo "---------------------"
+echo "✅ SQLite - Built-in (always available)"
 if pip show psycopg2-binary &>/dev/null; then
     version=$(pip show psycopg2-binary | grep Version | cut -d' ' -f2)
-    echo "✅ psycopg2-binary ($version) - PostgreSQL support"
+    echo "✅ PostgreSQL - psycopg2-binary ($version) installed"
 else
-    echo "⚠️  psycopg2-binary - Optional PostgreSQL support (SQLite will be used)"
+    echo "⚠️  PostgreSQL - Optional (run ./install-postgresql.sh to add)"
 fi
 
 echo ""
@@ -61,7 +62,8 @@ echo ""
 echo "📋 Installation Commands:"
 echo "-------------------------"
 echo "Main dependencies:     pip install -r requirements.txt"
-echo "PostgreSQL support:    pip install -r requirements-postgres.txt"
+echo "PostgreSQL support:    ./install-postgresql.sh"
 echo "Format code:          ./format-code.sh"
+echo "Verify setup:         ./verify-dependencies.sh"
 echo ""
 echo "🚀 Ready to launch FitFriendsClub!"
