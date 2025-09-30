@@ -1,0 +1,11 @@
+# Azure App Service Configuration for FitFriendsClub
+# Optimized to prevent PostgreSQL pg_config errors
+
+[build]
+# Use flexible requirements to handle version compatibility
+preBuild = "cd backend && pip install --upgrade pip"
+build = "cd backend && pip install --no-cache-dir --prefer-binary --only-binary=:all: -r requirements-flexible.txt"
+
+[deploy]
+# Flask app deployment settings
+startup_command = "cd backend && gunicorn app:app --bind 0.0.0.0:8000"

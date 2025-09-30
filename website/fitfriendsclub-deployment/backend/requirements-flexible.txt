@@ -1,5 +1,5 @@
-# FLEXIBLE PostgreSQL Requirements - Compatible with older package indices
-# Use this if psycopg2-binary==2.9.10 is not available on deployment platform
+# FLEXIBLE PostgreSQL Requirements - Compatible with older package indices  
+# Use this if psycopg2-binary==2.9.9 is not available on deployment platform
 
 # Core Flask Dependencies
 flask==3.0.3
