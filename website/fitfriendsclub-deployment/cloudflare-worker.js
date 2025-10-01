@@ -1,4 +1,4 @@
-// Cloudflare Worker - Direct conversion of your Flask FitFriendsClub API
+// Cloudflare Worker - Direct conversion of your Flask FitFriendsClubs API
 // This converts your existing Flask routes to Cloudflare Workers
 
 export default {
@@ -9,7 +9,7 @@ export default {
     
     // CORS headers for Wix integration
     const corsHeaders = {
-      'Access-Control-Allow-Origin': '*', // Configure for your Wix domain
+      'Access-Control-Allow-Origin': '*', // Configure for your Wix domain: https://yoursite.wix.com
       'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
       'Access-Control-Max-Age': '86400',
@@ -536,7 +536,7 @@ async function handleImageUpload(request, env) {
       },
     });
     
-    const imageUrl = `https://your-domain.com/images/${fileName}`;
+    const imageUrl = `https://api.fitfriendsclubs.com/images/${fileName}`;
     
     return new Response(JSON.stringify({
       success: true,
