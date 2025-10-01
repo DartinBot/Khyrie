@@ -1,0 +1,26 @@
+{
+  "name": "fitfriendsclub-cloudflare",
+  "version": "1.0.0",
+  "description": "FitFriendsClub API on Cloudflare Workers",
+  "main": "cloudflare-worker.js",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler publish",
+    "tail": "wrangler tail",
+    "test": "wrangler dev --test",
+    "setup": "npm install && wrangler login"
+  },
+  "devDependencies": {
+    "wrangler": "^3.0.0"
+  },
+  "dependencies": {
+    "@cloudflare/workers-types": "^4.0.0"
+  },
+  "keywords": [
+    "cloudflare",
+    "workers", 
+    "fitness",
+    "api",
+    "wix"
+  ]
+}
