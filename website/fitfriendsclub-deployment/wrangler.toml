@@ -14,6 +14,10 @@ routes = [
 [env.production.vars]
 ENVIRONMENT = "production"
 API_VERSION = "1.0"
+# Supabase configuration (non-sensitive values)
+# Replace SUPABASE_ANON_KEY with your actual anon key from Supabase Dashboard → Settings → API
+SUPABASE_URL = "https://bkaebhccbzpwiyxmpyln.supabase.co"
+SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrYWViaGNjYnpwd2l5eG1weWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjk2NDQsImV4cCI6MjA3NDkwNTY0NH0.n_PZ5YsBxjF6jDPM3HPZ5Vl3ilgKfHiHRVoiLM1h5nY"
 
 # R2 Storage for image uploads
 [[env.production.r2_buckets]]
@@ -25,15 +29,15 @@ bucket_name = "fitfriendsclubs-images"
 # Local development configuration
 
 # Secrets to set via CLI:
-# wrangler secret put DATABASE_API_URL --env production
-# wrangler secret put DATABASE_API_KEY --env production
-
-# KV Storage for caching (optional)
-[[kv_namespaces]]
-binding = "CACHE"
-id = "your-kv-namespace-id"
+# wrangler secret put SUPABASE_SERVICE_KEY --env production
+# wrangler secret put DATABASE_URL --env production
+# wrangler secret put TURN_SERVER_SECRET --env production
+# KV Storage for caching (optional - comment out if not using)
+# [[kv_namespaces]]
+# binding = "CACHE"
+# id = "your-kv-namespace-id"
 
 # Custom domains (configure in Cloudflare dashboard)
-[routes]
-pattern = "api.fitfriendsclub.com/*"
-zone_name = "fitfriendsclub.com"
+# [routes]
+# pattern = "api.fitfriendsclub.com/*"
+# zone_name = "fitfriendsclub.com"

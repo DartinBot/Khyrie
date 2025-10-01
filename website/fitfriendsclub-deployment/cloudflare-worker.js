@@ -195,19 +195,134 @@ async function getUserFromToken(request, env) {
   }
 }
 
-// Database helper - works with Supabase, Neon, or any PostgreSQL
+// Supabase database helper - REST API approach
 async function queryDatabase(sql, params = [], env) {
-  const response = await fetch(env.DATABASE_API_URL, {
+  // For Supabase, we can use either REST API or direct PostgreSQL connection
+  // This example uses Supabase REST API for better integration
+  
+  if (env.SUPABASE_URL && env.SUPABASE_SERVICE_KEY) {
+    // Use Supabase REST API (recommended)
+    return await querySupabaseREST(sql, params, env);
+  } else if (env.DATABASE_URL) {
+    // Fallback to direct PostgreSQL connection
+    return await queryPostgreSQL(sql, params, env);
+  } else {
+    throw new Error('No database configuration found');
+  }
+}
+
+// Supabase REST API helper
+async function querySupabaseREST(sql, params = [], env) {
+  // For complex SQL queries, use Supabase RPC (stored procedures)
+  // For simple CRUD, use Supabase REST endpoints
+  
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/rpc/execute_sql`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${env.DATABASE_API_KEY}`
+      'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'apikey': env.SUPABASE_SERVICE_KEY
+    },
+    body: JSON.stringify({ 
+      sql_query: sql, 
+      parameters: params 
+    })
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Supabase query failed: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return { rows: data };
+}
+
+// Direct PostgreSQL connection (fallback)
+async function queryPostgreSQL(sql, params = [], env) {
+  const response = await fetch(env.DATABASE_API_URL || env.DATABASE_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${env.DATABASE_API_KEY || env.SUPABASE_SERVICE_KEY}`
     },
     body: JSON.stringify({ query: sql, params })
   });
   
   if (!response.ok) {
     throw new Error(`Database query failed: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+// Supabase table-specific helpers for better performance
+async function supabaseSelect(table, columns = '*', filters = {}, env) {
+  let url = `${env.SUPABASE_URL}/rest/v1/${table}?select=${columns}`;
+  
+  // Add filters
+  Object.entries(filters).forEach(([key, value]) => {
+    url += `&${key}=eq.${value}`;
+  });
+  
+  const response = await fetch(url, {
+    headers: {
+      'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'apikey': env.SUPABASE_SERVICE_KEY
+    }
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Supabase select failed: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+async function supabaseInsert(table, data, env) {
+  const response = await fetch(`${env.SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'apikey': env.SUPABASE_SERVICE_KEY,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Supabase insert failed: ${response.statusText}`);
+  }
+  
+  return response.json();
+}
+
+async function supabaseUpdate(table, data, filters, env) {
+  let url = `${env.SUPABASE_URL}/rest/v1/${table}`;
+  
+  // Add filters
+  const filterParams = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    filterParams.append(key, `eq.${value}`);
+  });
+  
+  if (filterParams.toString()) {
+    url += `?${filterParams.toString()}`;
+  }
+  
+  const response = await fetch(url, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${env.SUPABASE_SERVICE_KEY}`,
+      'apikey': env.SUPABASE_SERVICE_KEY,
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Supabase update failed: ${response.statusText}`);
   }
   
   return response.json();

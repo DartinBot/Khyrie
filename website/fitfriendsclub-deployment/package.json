@@ -8,13 +8,22 @@
     "deploy": "wrangler publish",
     "tail": "wrangler tail",
     "test": "wrangler dev --test",
-    "setup": "npm install && wrangler login"
+    "setup": "npm install && wrangler login",
+    "db:deploy": "node deploy-database.js",
+    "db:deploy:bash": "./deploy-database.sh",
+    "db:deploy:python": "python deploy-database.py",
+    "db:test": "node -e \"require('pg').Client; console.log('✅ pg module available')\"",
+    "db:install": "npm install pg",
+    "supabase:setup": "./setup-supabase.sh",
+    "supabase:deploy": "wrangler publish --env production",
+    "supabase:secrets": "echo 'Set secrets with: wrangler secret put SECRET_NAME --env production'"
   },
   "devDependencies": {
     "wrangler": "^3.0.0"
   },
   "dependencies": {
-    "@cloudflare/workers-types": "^4.0.0"
+    "@cloudflare/workers-types": "^4.0.0",
+    "pg": "^8.11.3"
   },
   "keywords": [
     "cloudflare",

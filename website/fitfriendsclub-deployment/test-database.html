@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitFriendsClubs Database Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            border-left: 4px solid #4CAF50;
+        }
+        .error {
+            border-left-color: #f44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+        .success {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+        button {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .results {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .loading {
+            opacity: 0.6;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success { background: #4CAF50; }
+        .status.error { background: #f44336; }
+        .status.loading { background: #ff9800; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏋️ FitFriendsClubs Database Test</h1>
+        
+        <div class="test-section">
+            <h3>Database Connection Test</h3>
+            <p>This will test your Supabase database connection and verify that all tables were created successfully.</p>
+            <button onclick="testDatabaseConnection()">Test Database Connection</button>
+            <span id="connection-status" class="status" style="display: none;"></span>
+            <div id="connection-results" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Sample Data Verification</h3>
+            <p>Check that sample fitness clubs and virtual trails were inserted correctly.</p>
+            <button onclick="testSampleData()">Check Sample Data</button>
+            <span id="data-status" class="status" style="display: none;"></span>
+            <div id="data-results" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>API Endpoints Test</h3>
+            <p>Test key API endpoints to ensure your Cloudflare Worker is properly connected.</p>
+            <button onclick="testAPIEndpoints()">Test API Endpoints</button>
+            <span id="api-status" class="status" style="display: none;"></span>
+            <div id="api-results" class="results" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>Performance Test</h3>
+            <p>Run a quick performance test to check response times.</p>
+            <button onclick="testPerformance()">Run Performance Test</button>
+            <span id="perf-status" class="status" style="display: none;"></span>
+            <div id="perf-results" class="results" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://bkaebhccbzpwiyxmpyln.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJrYWViaGNjYnpwd2l5eG1weWxuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkzMjk2NDQsImV4cCI6MjA3NDkwNTY0NH0.n_PZ5YsBxjF6jDPM3HPZ5Vl3ilgKfHiHRVoiLM1h5nY';
+
+        async function supabaseQuery(query) {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/execute_sql`, {
+                method: 'POST',
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ query })
+            });
+            return response;
+        }
+
+        async function supabaseSelect(table, columns = '*', limit = 10) {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/${table}?select=${columns}&limit=${limit}`, {
+                headers: {
+                    'apikey': SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                }
+            });
+            return response;
+        }
+
+        function setStatus(id, status, text) {
+            const statusEl = document.getElementById(id);
+            statusEl.style.display = 'inline-block';
+            statusEl.className = `status ${status}`;
+            statusEl.textContent = text;
+        }
+
+        function showResults(id, content) {
+            const resultsEl = document.getElementById(id);
+            resultsEl.style.display = 'block';
+            resultsEl.textContent = content;
+        }
+
+        async function testDatabaseConnection() {
+            setStatus('connection-status', 'loading', 'Testing...');
+            showResults('connection-results', 'Connecting to database...\n');
+
+            try {
+                // Test basic connection by getting table info
+                const tables = [
+                    'users', 'fitness_clubs', 'virtual_trails', 'group_sessions', 
+                    'streaming_sessions', 'club_members', 'user_equipment'
+                ];
+                
+                let results = 'Database Connection Test Results:\n\n';
+                let allTablesExist = true;
+
+                for (const table of tables) {
+                    try {
+                        const response = await supabaseSelect(table, 'count(*)', 1);
+                        if (response.ok) {
+                            results += `✅ Table '${table}' exists and is accessible\n`;
+                        } else {
+                            results += `❌ Table '${table}' error: ${response.status}\n`;
+                            allTablesExist = false;
+                        }
+                    } catch (error) {
+                        results += `❌ Table '${table}' error: ${error.message}\n`;
+                        allTablesExist = false;
+                    }
+                }
+
+                if (allTablesExist) {
+                    setStatus('connection-status', 'success', 'Success');
+                    results += '\n🎉 All tables created successfully!';
+                } else {
+                    setStatus('connection-status', 'error', 'Issues Found');
+                    results += '\n⚠️ Some tables may be missing or inaccessible.';
+                }
+
+                showResults('connection-results', results);
+
+            } catch (error) {
+                setStatus('connection-status', 'error', 'Failed');
+                showResults('connection-results', `Connection failed: ${error.message}`);
+            }
+        }
+
+        async function testSampleData() {
+            setStatus('data-status', 'loading', 'Checking...');
+            
+            try {
+                let results = 'Sample Data Verification:\n\n';
+                
+                // Check users
+                const usersResponse = await supabaseSelect('users', 'count(*)');
+                const usersData = await usersResponse.json();
+                results += `👤 Users: ${usersData[0]?.count || 0} records\n`;
+
+                // Check fitness clubs
+                const clubsResponse = await supabaseSelect('fitness_clubs', 'name,category');
+                const clubsData = await clubsResponse.json();
+                results += `🏃 Fitness Clubs: ${clubsData.length} records\n`;
+                if (clubsData.length > 0) {
+                    results += `   Sample clubs: ${clubsData.map(c => c.name).join(', ')}\n`;
+                }
+
+                // Check virtual trails
+                const trailsResponse = await supabaseSelect('virtual_trails', 'name,location,difficulty');
+                const trailsData = await trailsResponse.json();
+                results += `🗺️ Virtual Trails: ${trailsData.length} records\n`;
+                if (trailsData.length > 0) {
+                    results += `   Sample trails: ${trailsData.map(t => `${t.name} (${t.difficulty})`).join(', ')}\n`;
+                }
+
+                if (clubsData.length > 0 && trailsData.length > 0) {
+                    setStatus('data-status', 'success', 'Data Found');
+                    results += '\n✅ Sample data loaded successfully!';
+                } else {
+                    setStatus('data-status', 'error', 'Missing Data');
+                    results += '\n⚠️ Some sample data may be missing.';
+                }
+
+                showResults('data-results', results);
+
+            } catch (error) {
+                setStatus('data-status', 'error', 'Failed');
+                showResults('data-results', `Sample data check failed: ${error.message}`);
+            }
+        }
+
+        async function testAPIEndpoints() {
+            setStatus('api-status', 'loading', 'Testing...');
+            
+            try {
+                let results = 'API Endpoints Test:\n\n';
+                const baseURL = 'https://fitfriendsclubs-api.your-domain.workers.dev'; // Replace with actual domain
+                
+                results += '⚠️ Note: Update the baseURL in this test with your actual Cloudflare Worker domain\n\n';
+                
+                const endpoints = [
+                    { path: '/clubs', method: 'GET', description: 'Get fitness clubs' },
+                    { path: '/trails', method: 'GET', description: 'Get virtual trails' },
+                    { path: '/health', method: 'GET', description: 'Health check' }
+                ];
+
+                for (const endpoint of endpoints) {
+                    try {
+                        results += `Testing ${endpoint.method} ${endpoint.path} - ${endpoint.description}...\n`;
+                        
+                        // For now, just show what would be tested
+                        results += `   URL: ${baseURL}${endpoint.path}\n`;
+                        results += `   Status: Ready for testing once Worker is deployed\n\n`;
+                        
+                    } catch (error) {
+                        results += `   ❌ Error: ${error.message}\n\n`;
+                    }
+                }
+
+                setStatus('api-status', 'success', 'Ready');
+                results += '📝 Next: Deploy your Cloudflare Worker to test these endpoints!';
+                showResults('api-results', results);
+
+            } catch (error) {
+                setStatus('api-status', 'error', 'Error');
+                showResults('api-results', `API test error: ${error.message}`);
+            }
+        }
+
+        async function testPerformance() {
+            setStatus('perf-status', 'loading', 'Testing...');
+            
+            try {
+                let results = 'Performance Test Results:\n\n';
+                
+                const startTime = performance.now();
+                
+                // Test database query performance
+                const response = await supabaseSelect('fitness_clubs', 'id,name,category', 5);
+                const endTime = performance.now();
+                
+                const responseTime = endTime - startTime;
+                
+                results += `Database Query Performance:\n`;
+                results += `Response time: ${responseTime.toFixed(2)}ms\n`;
+                
+                if (responseTime < 500) {
+                    results += `Status: ✅ Excellent (< 500ms)\n`;
+                    setStatus('perf-status', 'success', 'Excellent');
+                } else if (responseTime < 1000) {
+                    results += `Status: ⚡ Good (< 1s)\n`;
+                    setStatus('perf-status', 'success', 'Good');
+                } else {
+                    results += `Status: ⚠️ Slow (> 1s)\n`;
+                    setStatus('perf-status', 'error', 'Slow');
+                }
+
+                results += `\nDatabase connection: ${response.ok ? '✅ Connected' : '❌ Failed'}\n`;
+                results += `HTTP status: ${response.status}\n`;
+
+                showResults('perf-results', results);
+
+            } catch (error) {
+                setStatus('perf-status', 'error', 'Failed');
+                showResults('perf-results', `Performance test failed: ${error.message}`);
+            }
+        }
+    </script>
+</body>
+</html>
