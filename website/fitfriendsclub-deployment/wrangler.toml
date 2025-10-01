@@ -1,22 +1,32 @@
-# Cloudflare Worker Configuration
-name = "fitfriendsclub-api"
+# FitFriendsClubs API - Cloudflare Worker Configuration
+name = "fitfriendsclubs-api"
 main = "cloudflare-worker.js"
-compatibility_date = "2023-12-01"
+compatibility_date = "2025-01-01"
 compatibility_flags = ["nodejs_compat"]
 
-# Environment variables (add these to Cloudflare dashboard)
-[vars]
+# Production environment with custom domain routing
+[env.production]
+routes = [
+  { pattern = "api.fitfriendsclubs.com/*", zone_name = "fitfriendsclubs.com" }
+]
+
+# Environment variables
+[env.production.vars]
 ENVIRONMENT = "production"
+API_VERSION = "1.0"
 
-# Secrets (add via: wrangler secret put SECRET_NAME)
-# DATABASE_URL = "your-postgres-connection-string"
-# DATABASE_API_KEY = "your-database-api-key"
-# JWT_SECRET = "your-jwt-secret-key"
-
-# R2 Storage for image uploads (optional)
-[[r2_buckets]]
+# R2 Storage for image uploads
+[[env.production.r2_buckets]]
 binding = "IMAGES_BUCKET"
-bucket_name = "fitfriendsclub-images"
+bucket_name = "fitfriendsclubs-images"
+
+# Development environment for testing
+[env.development]
+# Local development configuration
+
+# Secrets to set via CLI:
+# wrangler secret put DATABASE_API_URL --env production
+# wrangler secret put DATABASE_API_KEY --env production
 
 # KV Storage for caching (optional)
 [[kv_namespaces]]

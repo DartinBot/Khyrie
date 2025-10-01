@@ -114,6 +114,32 @@ export default {
         case path === '/api/trails/leaderboard' && method === 'GET':
           response = await getTrailLeaderboard(request, env);
           break;
+        case path === '/api/streaming/sessions' && method === 'POST':
+          response = await createStreamingSession(request, env);
+          break;
+        case path.startsWith('/api/streaming/sessions/') && path.endsWith('/start') && method === 'POST':
+          const streamSessionId = path.split('/')[4];
+          response = await startStreamingSession(streamSessionId, request, env);
+          break;
+        case path.startsWith('/api/streaming/sessions/') && path.endsWith('/stop') && method === 'POST':
+          const stopStreamSessionId = path.split('/')[4];
+          response = await stopStreamingSession(stopStreamSessionId, request, env);
+          break;
+        case path.startsWith('/api/streaming/sessions/') && path.endsWith('/join') && method === 'POST':
+          const joinStreamSessionId = path.split('/')[4];
+          response = await joinStreamingSession(joinStreamSessionId, request, env);
+          break;
+        case path.startsWith('/api/streaming/sessions/') && path.endsWith('/leave') && method === 'POST':
+          const leaveStreamSessionId = path.split('/')[4];
+          response = await leaveStreamingSession(leaveStreamSessionId, request, env);
+          break;
+        case path.startsWith('/api/streaming/sessions/') && method === 'GET':
+          const getStreamSessionId = path.split('/')[4];
+          response = await getStreamingSession(getStreamSessionId, request, env);
+          break;
+        case path === '/api/streaming/token' && method === 'POST':
+          response = await getStreamingToken(request, env);
+          break;
         case path === '/api/health':
           response = new Response(JSON.stringify({ 
             status: 'healthy', 
@@ -1525,5 +1551,502 @@ async function getTrailLeaderboard(request, env) {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
     });
+  }
+}
+
+// ===== LIVE VIDEO STREAMING SYSTEM =====
+
+// Create a streaming session for group workouts
+async function createStreamingSession(request, env) {
+  try {
+    const userId = await getUserFromToken(request, env);
+    const { group_session_id, stream_title, stream_description, max_viewers, stream_quality } = await request.json();
+    
+    // Verify user is instructor or admin of the group session
+    const sessionCheck = await queryDatabase(
+      `SELECT gs.*, cm.role, fc.name as club_name
+       FROM group_sessions gs
+       JOIN fitness_clubs fc ON gs.club_id = fc.id
+       LEFT JOIN club_members cm ON gs.club_id = cm.club_id AND cm.user_id = $1
+       WHERE gs.id = $2`,
+      [userId, group_session_id],
+      env
+    );
+    
+    if (sessionCheck.rows.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Group session not found' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const session = sessionCheck.rows[0];
+    if (session.instructor_id !== userId && !['admin', 'moderator'].includes(session.role)) {
+      return new Response(JSON.stringify({ 
+        error: 'Only session instructors or club admins can create streams' 
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Generate unique stream key and room ID
+    const streamKey = crypto.randomUUID();
+    const roomId = crypto.randomUUID();
+    
+    // Create streaming session record
+    const result = await queryDatabase(
+      `INSERT INTO streaming_sessions 
+       (group_session_id, host_user_id, stream_key, room_id, stream_title, stream_description, 
+        max_viewers, stream_quality, status, created_at)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+      [
+        group_session_id, userId, streamKey, roomId, stream_title, stream_description,
+        max_viewers || 100, stream_quality || 'HD', 'created', new Date().toISOString()
+      ],
+      env
+    );
+    
+    return new Response(JSON.stringify({
+      success: true,
+      streaming_session: result.rows[0],
+      stream_config: {
+        stream_key: streamKey,
+        room_id: roomId,
+        rtmp_url: `rtmp://live.fitfriendsclubs.com/live/${streamKey}`,
+        webrtc_url: `wss://stream.fitfriendsclubs.com/webrtc/${roomId}`,
+        hls_url: `https://stream.fitfriendsclubs.com/hls/${roomId}/playlist.m3u8`
+      }
+    }), {
+      status: 201,
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to create streaming session' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Start live streaming for a session
+async function startStreamingSession(sessionId, request, env) {
+  try {
+    const userId = await getUserFromToken(request, env);
+    
+    // Verify ownership and update status
+    const result = await queryDatabase(
+      `UPDATE streaming_sessions 
+       SET status = 'live', started_at = $1, viewer_count = 0
+       WHERE id = $2 AND host_user_id = $3 
+       RETURNING *`,
+      [new Date().toISOString(), sessionId, userId],
+      env
+    );
+    
+    if (result.rows.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Streaming session not found or unauthorized' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const streamingSession = result.rows[0];
+    
+    // Notify group session participants about live stream
+    await notifyParticipantsOfStream(streamingSession.group_session_id, streamingSession, env);
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Streaming session started successfully',
+      streaming_session: streamingSession,
+      live_urls: {
+        viewer_url: `https://fitfriendsclubs.com/stream/${streamingSession.room_id}`,
+        chat_url: `wss://chat.fitfriendsclubs.com/room/${streamingSession.room_id}`
+      }
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to start streaming session' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Stop live streaming
+async function stopStreamingSession(sessionId, request, env) {
+  try {
+    const userId = await getUserFromToken(request, env);
+    
+    const result = await queryDatabase(
+      `UPDATE streaming_sessions 
+       SET status = 'ended', ended_at = $1
+       WHERE id = $2 AND host_user_id = $3 
+       RETURNING *`,
+      [new Date().toISOString(), sessionId, userId],
+      env
+    );
+    
+    if (result.rows.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Streaming session not found or unauthorized' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Streaming session stopped successfully'
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to stop streaming session' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Join a live stream as a viewer
+async function joinStreamingSession(sessionId, request, env) {
+  try {
+    const userId = await getUserFromToken(request, env);
+    
+    // Get streaming session details
+    const streamResult = await queryDatabase(
+      `SELECT ss.*, gs.club_id, cm.user_id as is_member
+       FROM streaming_sessions ss
+       JOIN group_sessions gs ON ss.group_session_id = gs.id
+       LEFT JOIN club_members cm ON gs.club_id = cm.club_id AND cm.user_id = $1
+       WHERE ss.id = $2`,
+      [userId, sessionId],
+      env
+    );
+    
+    if (streamResult.rows.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Streaming session not found' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const stream = streamResult.rows[0];
+    
+    // Check if user is club member (required to view)
+    if (!stream.is_member) {
+      return new Response(JSON.stringify({ 
+        error: 'Must be a club member to join live streams' 
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Check if stream is live
+    if (stream.status !== 'live') {
+      return new Response(JSON.stringify({ 
+        error: 'Stream is not currently live' 
+      }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Check viewer capacity
+    if (stream.viewer_count >= stream.max_viewers) {
+      return new Response(JSON.stringify({ 
+        error: 'Stream has reached maximum viewer capacity' 
+      }), {
+        status: 409,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Add viewer to stream
+    await queryDatabase(
+      `INSERT INTO stream_viewers (streaming_session_id, user_id, joined_at) 
+       VALUES ($1, $2, $3) 
+       ON CONFLICT (streaming_session_id, user_id) 
+       DO UPDATE SET joined_at = $3`,
+      [sessionId, userId, new Date().toISOString()],
+      env
+    );
+    
+    // Update viewer count
+    await queryDatabase(
+      'UPDATE streaming_sessions SET viewer_count = viewer_count + 1 WHERE id = $1',
+      [sessionId],
+      env
+    );
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Successfully joined live stream',
+      stream_urls: {
+        hls_url: `https://stream.fitfriendsclubs.com/hls/${stream.room_id}/playlist.m3u8`,
+        webrtc_url: `wss://stream.fitfriendsclubs.com/webrtc/${stream.room_id}`,
+        chat_url: `wss://chat.fitfriendsclubs.com/room/${stream.room_id}`
+      },
+      stream_info: {
+        title: stream.stream_title,
+        description: stream.stream_description,
+        quality: stream.stream_quality,
+        viewer_count: stream.viewer_count + 1
+      }
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to join streaming session' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Leave a live stream
+async function leaveStreamingSession(sessionId, request, env) {
+  try {
+    const userId = await getUserFromToken(request, env);
+    
+    // Remove viewer from stream
+    const result = await queryDatabase(
+      'DELETE FROM stream_viewers WHERE streaming_session_id = $1 AND user_id = $2 RETURNING id',
+      [sessionId, userId],
+      env
+    );
+    
+    if (result.rows.length > 0) {
+      // Update viewer count
+      await queryDatabase(
+        'UPDATE streaming_sessions SET viewer_count = GREATEST(0, viewer_count - 1) WHERE id = $1',
+        [sessionId],
+        env
+      );
+    }
+    
+    return new Response(JSON.stringify({
+      success: true,
+      message: 'Left streaming session'
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to leave streaming session' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Get streaming session details
+async function getStreamingSession(sessionId, request, env) {
+  try {
+    const userId = await getUserFromToken(request, env);
+    
+    const result = await queryDatabase(
+      `SELECT ss.*, gs.title as session_title, fc.name as club_name, 
+              u.username as host_username,
+              COUNT(sv.user_id) as current_viewers
+       FROM streaming_sessions ss
+       JOIN group_sessions gs ON ss.group_session_id = gs.id
+       JOIN fitness_clubs fc ON gs.club_id = fc.id
+       JOIN users u ON ss.host_user_id = u.id
+       LEFT JOIN stream_viewers sv ON ss.id = sv.streaming_session_id
+       WHERE ss.id = $1
+       GROUP BY ss.id, gs.title, fc.name, u.username`,
+      [sessionId],
+      env
+    );
+    
+    if (result.rows.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Streaming session not found' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const streamingSession = result.rows[0];
+    
+    // Get recent chat messages (if applicable)
+    const chatMessages = await queryDatabase(
+      `SELECT cm.*, u.username 
+       FROM chat_messages cm
+       JOIN users u ON cm.user_id = u.id
+       WHERE cm.streaming_session_id = $1
+       ORDER BY cm.created_at DESC
+       LIMIT 50`,
+      [sessionId],
+      env
+    );
+    
+    return new Response(JSON.stringify({
+      streaming_session: streamingSession,
+      chat_messages: chatMessages.rows.reverse(), // Oldest first for display
+      is_live: streamingSession.status === 'live'
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to get streaming session' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Get streaming token for WebRTC authentication
+async function getStreamingToken(request, env) {
+  try {
+    const userId = await getUserFromToken(request, env);
+    const { room_id, role } = await request.json(); // role: 'host' or 'viewer'
+    
+    // Validate user has access to the room
+    const roomCheck = await queryDatabase(
+      `SELECT ss.*, cm.user_id as is_member
+       FROM streaming_sessions ss
+       JOIN group_sessions gs ON ss.group_session_id = gs.id
+       LEFT JOIN club_members cm ON gs.club_id = cm.club_id AND cm.user_id = $1
+       WHERE ss.room_id = $2`,
+      [userId, room_id],
+      env
+    );
+    
+    if (roomCheck.rows.length === 0) {
+      return new Response(JSON.stringify({ 
+        error: 'Room not found' 
+      }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    const room = roomCheck.rows[0];
+    
+    // Check permissions
+    if (role === 'host' && room.host_user_id !== userId) {
+      return new Response(JSON.stringify({ 
+        error: 'Not authorized to host this stream' 
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    if (!room.is_member) {
+      return new Response(JSON.stringify({ 
+        error: 'Must be club member to access stream' 
+      }), {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    // Generate WebRTC token (simplified - use proper JWT signing in production)
+    const tokenPayload = {
+      user_id: userId,
+      room_id: room_id,
+      role: role,
+      exp: Date.now() + 3600000, // 1 hour
+      iat: Date.now()
+    };
+    
+    const token = btoa(JSON.stringify(tokenPayload));
+    
+    return new Response(JSON.stringify({
+      success: true,
+      token: token,
+      room_config: {
+        room_id: room_id,
+        role: role,
+        ice_servers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { 
+            urls: 'turn:turn.fitfriendsclubs.com:3478',
+            username: 'fitfriendsuser',
+            credential: env.TURN_SERVER_SECRET 
+          }
+        ]
+      }
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    
+  } catch (error) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to generate streaming token' 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}
+
+// Helper function to notify group session participants about live stream
+async function notifyParticipantsOfStream(groupSessionId, streamingSession, env) {
+  try {
+    // Get all participants of the group session
+    const participants = await queryDatabase(
+      `SELECT gsp.user_id, u.email, u.username
+       FROM group_session_participants gsp
+       JOIN users u ON gsp.user_id = u.id
+       WHERE gsp.session_id = $1`,
+      [groupSessionId],
+      env
+    );
+    
+    // Create notifications for each participant
+    for (const participant of participants.rows) {
+      await queryDatabase(
+        `INSERT INTO notifications (user_id, type, title, message, data, created_at)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          participant.user_id,
+          'live_stream_started',
+          'Live Stream Started!',
+          `${streamingSession.stream_title} is now live. Join your group workout session!`,
+          JSON.stringify({
+            streaming_session_id: streamingSession.id,
+            room_id: streamingSession.room_id,
+            group_session_id: groupSessionId
+          }),
+          new Date().toISOString()
+        ],
+        env
+      );
+    }
+  } catch (error) {
+    console.error('Failed to notify participants:', error);
   }
 }

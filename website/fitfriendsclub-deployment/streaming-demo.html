@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitFriendsClubs Live Streaming Demo</title>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+        
+        .video-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .chat-section {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #stream-video {
+            width: 100%;
+            height: 60%;
+            background: black;
+            border-radius: 10px;
+            object-fit: cover;
+        }
+        
+        .stream-info {
+            margin-top: 15px;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+        }
+        
+        .stream-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stream-stats {
+            display: flex;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .stat {
+            background: rgba(255,255,255,0.2);
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+        
+        .controls {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.2);
+            color: white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            background: rgba(0,0,0,0.3);
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            min-height: 300px;
+        }
+        
+        .chat-message {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+        }
+        
+        .message-username {
+            font-weight: bold;
+            color: #4CAF50;
+            margin-right: 8px;
+        }
+        
+        .chat-input-container {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+            outline: none;
+        }
+        
+        .send-btn {
+            padding: 12px 20px;
+            background: #4CAF50;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        
+        .status-live { background: #ff4444; }
+        .status-offline { background: #666; }
+        
+        .quality-selector {
+            margin-left: auto;
+        }
+        
+        .quality-selector select {
+            padding: 8px 12px;
+            border-radius: 15px;
+            border: none;
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            #stream-video {
+                height: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Video Section -->
+        <div class="video-section">
+            <video id="stream-video" controls poster="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI3MjAiIHZpZXdCb3g9IjAgMCAxMjgwIDcyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyODAiIGhlaWdodD0iNzIwIiBmaWxsPSIjMzMzIi8+Cjx0ZXh0IHg9IjY0MCIgeT0iMzYwIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSI0OCIgZm9udC1mYW1pbHk9IkFyaWFsIj5DbGljayB0byBTdGFydCBTdHJlYW08L3RleHQ+Cjwvc3ZnPgo=">
+                <source id="video-source" src="" type="application/x-mpegURL">
+                Your browser does not support the video tag.
+            </video>
+            
+            <div class="stream-info">
+                <div class="stream-title" id="stream-title">
+                    <span class="status-indicator status-offline" id="status-indicator"></span>
+                    FitFriendsClubs Live Stream
+                </div>
+                <p id="stream-description">Connect to a live workout session</p>
+                
+                <div class="stream-stats">
+                    <div class="stat">👥 <span id="viewer-count">0</span> viewers</div>
+                    <div class="stat">⏱️ <span id="stream-duration">00:00</span></div>
+                    <div class="stat">📶 <span id="stream-quality">HD</span></div>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn btn-primary" id="join-btn" onclick="joinStream()">Join Stream</button>
+                    <button class="btn btn-danger" id="leave-btn" onclick="leaveStream()" style="display: none;">Leave Stream</button>
+                    <button class="btn btn-secondary" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+                    
+                    <div class="quality-selector">
+                        <select id="quality-select" onchange="changeQuality()">
+                            <option value="auto">Auto Quality</option>
+                            <option value="hd" selected>HD (720p)</option>
+                            <option value="sd">SD (480p)</option>
+                            <option value="4k">4K (2160p)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Section -->
+        <div class="chat-section">
+            <h3>💬 Live Chat</h3>
+            <div class="chat-messages" id="chat-messages">
+                <div class="chat-message">
+                    <span class="message-username">System</span>
+                    Welcome to the FitFriendsClubs live stream! Chat with other participants during the workout.
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Type a message..." onkeypress="handleChatKeyPress(event)">
+                <button class="send-btn" onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Demo configuration
+        const DEMO_CONFIG = {
+            apiUrl: 'https://api.fitfriendsclubs.com',
+            streamSessionId: '123',
+            userId: 'demo-user',
+            username: 'DemoUser'
+        };
+        
+        let hls = null;
+        let chatSocket = null;
+        let streamStartTime = null;
+        let durationTimer = null;
+        
+        // Initialize demo
+        function initializeDemo() {
+            console.log('🎥 FitFriendsClubs Live Streaming Demo Initialized');
+            
+            // Simulate some demo data
+            updateStreamInfo({
+                title: 'Morning HIIT Cardio Blast',
+                description: 'High-intensity interval training to energize your day!',
+                viewer_count: Math.floor(Math.random() * 50) + 10,
+                quality: 'HD'
+            });
+            
+            // Add some demo chat messages
+            setTimeout(() => addChatMessage('FitnessCoach', 'Welcome everyone! Ready for an amazing workout? 💪'), 1000);
+            setTimeout(() => addChatMessage('YogaLover23', 'So excited for this session!'), 2000);
+            setTimeout(() => addChatMessage('RunnerMike', 'Let\'s crush this workout! 🔥'), 3000);
+        }
+        
+        // Join stream functionality
+        async function joinStream() {
+            try {
+                const joinBtn = document.getElementById('join-btn');
+                const leaveBtn = document.getElementById('leave-btn');
+                
+                joinBtn.textContent = 'Connecting...';
+                joinBtn.disabled = true;
+                
+                // Simulate API call to join stream
+                await simulateApiCall('join');
+                
+                // For demo, use a sample HLS stream
+                const demoStreamUrl = 'https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel.ism/.m3u8';
+                
+                await loadVideoStream(demoStreamUrl);
+                
+                // Update UI
+                document.getElementById('status-indicator').className = 'status-indicator status-live';
+                document.getElementById('stream-title').innerHTML = 
+                    '<span class="status-indicator status-live"></span>Morning HIIT Cardio Blast - LIVE';
+                
+                joinBtn.style.display = 'none';
+                leaveBtn.style.display = 'inline-block';
+                
+                // Start stream duration timer
+                streamStartTime = Date.now();
+                durationTimer = setInterval(updateStreamDuration, 1000);
+                
+                // Connect to demo chat
+                connectToChat();
+                
+                // Simulate viewer count updates
+                startViewerCountUpdates();
+                
+                addChatMessage('System', `${DEMO_CONFIG.username} joined the stream`);
+                
+            } catch (error) {
+                console.error('Error joining stream:', error);
+                alert('Failed to join stream. This is a demo - check console for details.');
+            }
+        }
+        
+        // Leave stream functionality
+        async function leaveStream() {
+            try {
+                if (hls) {
+                    hls.destroy();
+                    hls = null;
+                }
+                
+                if (chatSocket) {
+                    chatSocket.close();
+                    chatSocket = null;
+                }
+                
+                if (durationTimer) {
+                    clearInterval(durationTimer);
+                    durationTimer = null;
+                }
+                
+                // Update UI
+                document.getElementById('status-indicator').className = 'status-indicator status-offline';
+                document.getElementById('stream-title').innerHTML = 
+                    '<span class="status-indicator status-offline"></span>FitFriendsClubs Live Stream';
+                
+                document.getElementById('join-btn').style.display = 'inline-block';
+                document.getElementById('leave-btn').style.display = 'none';
+                document.getElementById('join-btn').disabled = false;
+                document.getElementById('join-btn').textContent = 'Join Stream';
+                
+                const video = document.getElementById('stream-video');
+                video.src = '';
+                
+                addChatMessage('System', `${DEMO_CONFIG.username} left the stream`);
+                
+            } catch (error) {
+                console.error('Error leaving stream:', error);
+            }
+        }
+        
+        // Load video stream with HLS.js
+        async function loadVideoStream(streamUrl) {
+            const video = document.getElementById('stream-video');
+            
+            if (Hls.isSupported()) {
+                hls = new Hls({
+                    enableWorker: true,
+                    lowLatencyMode: true,
+                    backBufferLength: 90
+                });
+                
+                hls.loadSource(streamUrl);
+                hls.attachMedia(video);
+                
+                hls.on(Hls.Events.MANIFEST_PARSED, function() {
+                    console.log('🎬 Stream manifest loaded, starting playback');
+                    video.play();
+                });
+                
+                hls.on(Hls.Events.ERROR, function(event, data) {
+                    console.error('HLS Error:', data);
+                });
+                
+            } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+                video.src = streamUrl;
+                video.addEventListener('loadedmetadata', function() {
+                    video.play();
+                });
+            } else {
+                throw new Error('HLS not supported in this browser');
+            }
+        }
+        
+        // Chat functionality
+        function connectToChat() {
+            // Simulate WebSocket connection
+            console.log('💬 Connected to chat server');
+            
+            // Add periodic demo messages
+            setTimeout(() => addChatMessage('FitnessCoach', 'Great form everyone! Keep it up! 💪'), 5000);
+            setTimeout(() => addChatMessage('HealthyMom', 'This is exactly what I needed today!'), 8000);
+            setTimeout(() => addChatMessage('GymRat99', 'Loving the energy in here! 🔥'), 12000);
+        }
+        
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const message = input.value.trim();
+            
+            if (message) {
+                addChatMessage(DEMO_CONFIG.username, message);
+                input.value = '';
+                
+                // Simulate other user responses
+                setTimeout(() => {
+                    const responses = ['Nice!', 'Agreed! 💯', 'Same here!', 'You got this! 💪', 'Great point!'];
+                    const randomUser = ['FitnessCoach', 'YogaLover23', 'RunnerMike', 'HealthyMom'][Math.floor(Math.random() * 4)];
+                    addChatMessage(randomUser, responses[Math.floor(Math.random() * responses.length)]);
+                }, 1000 + Math.random() * 3000);
+            }
+        }
+        
+        function addChatMessage(username, message) {
+            const chatMessages = document.getElementById('chat-messages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'chat-message';
+            
+            const timestamp = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            messageDiv.innerHTML = `
+                <span class="message-username">${username}</span>
+                <span class="message-text">${message}</span>
+                <small style="opacity: 0.7; float: right;">${timestamp}</small>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        function handleChatKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendChatMessage();
+            }
+        }
+        
+        // Utility functions
+        function updateStreamInfo(info) {
+            if (info.title) document.getElementById('stream-title').textContent = info.title;
+            if (info.description) document.getElementById('stream-description').textContent = info.description;
+            if (info.viewer_count) document.getElementById('viewer-count').textContent = info.viewer_count;
+            if (info.quality) document.getElementById('stream-quality').textContent = info.quality;
+        }
+        
+        function updateStreamDuration() {
+            if (streamStartTime) {
+                const elapsed = Date.now() - streamStartTime;
+                const minutes = Math.floor(elapsed / 60000);
+                const seconds = Math.floor((elapsed % 60000) / 1000);
+                document.getElementById('stream-duration').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+        }
+        
+        function startViewerCountUpdates() {
+            setInterval(() => {
+                const currentCount = parseInt(document.getElementById('viewer-count').textContent);
+                const change = Math.floor(Math.random() * 6) - 3; // -3 to +3
+                const newCount = Math.max(1, currentCount + change);
+                document.getElementById('viewer-count').textContent = newCount;
+            }, 5000 + Math.random() * 10000);
+        }
+        
+        function changeQuality() {
+            const select = document.getElementById('quality-select');
+            const quality = select.value;
+            
+            let qualityText = 'HD';
+            if (quality === '4k') qualityText = '4K';
+            else if (quality === 'sd') qualityText = 'SD';
+            else if (quality === 'auto') qualityText = 'Auto';
+            
+            document.getElementById('stream-quality').textContent = qualityText;
+            console.log('📶 Quality changed to:', qualityText);
+        }
+        
+        function toggleFullscreen() {
+            const video = document.getElementById('stream-video');
+            
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            } else if (video.webkitRequestFullscreen) {
+                video.webkitRequestFullscreen();
+            } else if (video.msRequestFullscreen) {
+                video.msRequestFullscreen();
+            }
+        }
+        
+        async function simulateApiCall(action) {
+            return new Promise(resolve => {
+                console.log(`🔄 API Call: ${action} stream session`);
+                setTimeout(resolve, 1000 + Math.random() * 1000);
+            });
+        }
+        
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializeDemo);
+    </script>
+</body>
+</html>
