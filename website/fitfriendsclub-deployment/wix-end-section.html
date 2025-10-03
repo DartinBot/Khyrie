@@ -1,0 +1,357 @@
+<!-- FitFriendsClubs Wix Integration - END Section -->
+<!-- Place this in: Settings > Custom Code > Add to END of BODY -->
+<!-- This handles utility functions, lightboxes, and cleanup -->
+
+<script>
+// Utility Functions
+function showGlobalLoading() {
+    const elements = ['#loadingIcon', '#globalLoading', '.fitfriends-loading'];
+    elements.forEach(selector => {
+        if ($w(selector)) {
+            $w(selector).show();
+        }
+    });
+}
+
+function hideGlobalLoading() {
+    const elements = ['#loadingIcon', '#globalLoading', '.fitfriends-loading'];
+    elements.forEach(selector => {
+        if ($w(selector)) {
+            $w(selector).hide();
+        }
+    });
+}
+
+function showLoading(containerSelector) {
+    if ($w('#loadingIcon')) {
+        $w('#loadingIcon').show();
+    }
+    if ($w(containerSelector)) {
+        $w(containerSelector).addClass('loading');
+    }
+}
+
+function hideLoading(containerSelector) {
+    if ($w('#loadingIcon')) {
+        $w('#loadingIcon').hide();
+    }
+    if ($w(containerSelector)) {
+        $w(containerSelector).removeClass('loading');
+    }
+}
+
+function showError(message) {
+    console.error('❌ Error:', message);
+    
+    // Show in error message element
+    if ($w('#errorMessage')) {
+        $w('#errorMessage').text = message;
+        $w('#errorMessage').addClass('fitfriends-error');
+        $w('#errorMessage').show();
+        
+        // Auto-hide after 5 seconds
+        setTimeout(() => {
+            if ($w('#errorMessage')) {
+                $w('#errorMessage').hide();
+            }
+        }, 5000);
+    }
+    
+    // Also show in toast/notification if available
+    if ($w('#notificationBar')) {
+        $w('#notificationBar').text = message;
+        $w('#notificationBar').addClass('fitfriends-error');
+        $w('#notificationBar').show();
+        
+        setTimeout(() => {
+            if ($w('#notificationBar')) {
+                $w('#notificationBar').hide();
+            }
+        }, 3000);
+    }
+}
+
+function showSuccess(message) {
+    console.log('✅ Success:', message);
+    
+    if ($w('#successMessage')) {
+        $w('#successMessage').text = message;
+        $w('#successMessage').addClass('fitfriends-success');
+        $w('#successMessage').show();
+        
+        setTimeout(() => {
+            if ($w('#successMessage')) {
+                $w('#successMessage').hide();
+            }
+        }, 3000);
+    }
+}
+
+function updateGlobalStatus(status, message) {
+    const statusElements = ['#statusIndicator', '#globalStatus', '#apiStatus'];
+    
+    statusElements.forEach(selector => {
+        if ($w(selector)) {
+            $w(selector).text = message;
+            
+            // Remove existing status classes
+            $w(selector).removeClass('fitfriends-status-online');
+            $w(selector).removeClass('fitfriends-status-offline');
+            
+            // Add appropriate status class
+            if (status === 'online') {
+                $w(selector).addClass('fitfriends-status-online');
+            } else {
+                $w(selector).addClass('fitfriends-status-offline');
+            }
+        }
+    });
+}
+
+function updateClubCount(count) {
+    const countElements = ['#clubCountDisplay', '#clubsCount', '#totalClubs'];
+    countElements.forEach(selector => {
+        if ($w(selector)) {
+            $w(selector).text = `${count} Clubs Available`;
+        }
+    });
+}
+
+function updateTrailCount(count) {
+    const countElements = ['#trailCountDisplay', '#trailsCount', '#totalTrails'];
+    countElements.forEach(selector => {
+        if ($w(selector)) {
+            $w(selector).text = `${count} Trails Available`;
+        }
+    });
+}
+
+// Lightbox Functions (only if feature enabled)
+function showClubDetails(clubData) {
+    if (!window.FitFriendsConfig.FEATURES.LIGHTBOXES) return;
+    
+    if ($w('#clubDetailsLightbox')) {
+        // Populate lightbox content
+        const lightboxElements = {
+            '#clubDetailsTitle': clubData.clubName,
+            '#clubDetailsCategory': `Category: ${clubData.clubCategory}`,
+            '#clubDetailsEquipment': `Equipment: ${clubData.equipmentType}`,
+            '#clubDetailsDescription': clubData.description
+        };
+        
+        Object.entries(lightboxElements).forEach(([selector, text]) => {
+            if ($w(selector)) {
+                $w(selector).text = text;
+            }
+        });
+        
+        // Show lightbox
+        $w('#clubDetailsLightbox').show();
+        
+        // Setup close button
+        if ($w('#closeClubDetails')) {
+            $w('#closeClubDetails').onClick(() => {
+                $w('#clubDetailsLightbox').hide();
+            });
+        }
+    }
+}
+
+function showTrailDetails(trailData) {
+    if (!window.FitFriendsConfig.FEATURES.LIGHTBOXES) return;
+    
+    if ($w('#trailDetailsLightbox')) {
+        const lightboxElements = {
+            '#trailDetailsTitle': trailData.trailName,
+            '#trailDetailsLocation': `Location: ${trailData.location}`,
+            '#trailDetailsDifficulty': `Difficulty: ${trailData.difficulty}`,
+            '#trailDetailsDistance': `Distance: ${trailData.distance}`,
+            '#trailDetailsDescription': trailData.description
+        };
+        
+        Object.entries(lightboxElements).forEach(([selector, text]) => {
+            if ($w(selector)) {
+                $w(selector).text = text;
+            }
+        });
+        
+        $w('#trailDetailsLightbox').show();
+        
+        if ($w('#closeTrailDetails')) {
+            $w('#closeTrailDetails').onClick(() => {
+                $w('#trailDetailsLightbox').hide();
+            });
+        }
+    }
+}
+
+// Global keyboard shortcuts
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', function(event) {
+        // Escape key closes lightboxes
+        if (event.key === 'Escape') {
+            if ($w('#clubDetailsLightbox')) {
+                $w('#clubDetailsLightbox').hide();
+            }
+            if ($w('#trailDetailsLightbox')) {
+                $w('#trailDetailsLightbox').hide();
+            }
+        }
+        
+        // Ctrl/Cmd + T for API test (debug mode only)
+        if ((event.ctrlKey || event.metaKey) && event.key === 't' && window.FitFriendsConfig.DEBUG_MODE) {
+            event.preventDefault();
+            if (window.FitFriendsClubs && window.FitFriendsClubs.test) {
+                window.FitFriendsClubs.test();
+            }
+        }
+    });
+}
+
+// Auto-refresh functionality (if enabled)
+function setupAutoRefresh() {
+    if (!window.FitFriendsConfig.FEATURES.AUTO_REFRESH) return;
+    
+    const refreshInterval = 300000; // 5 minutes
+    
+    setInterval(async () => {
+        try {
+            const healthCheck = await window.FitFriendsClubs.api.healthCheck();
+            
+            if (healthCheck.status === 'success') {
+                updateGlobalStatus('online', 'API Connected ✅ (Auto-refreshed)');
+            } else {
+                updateGlobalStatus('offline', 'API Connection Lost ❌');
+            }
+        } catch (error) {
+            updateGlobalStatus('offline', 'API Connection Lost ❌');
+            console.error('❌ Auto-refresh failed:', error);
+        }
+    }, refreshInterval);
+}
+
+// Performance monitoring
+function setupPerformanceMonitoring() {
+    if (!window.FitFriendsConfig.DEBUG_MODE) return;
+    
+    // Monitor API call performance
+    const originalFetch = window.fetch;
+    window.fetch = function(...args) {
+        const start = performance.now();
+        return originalFetch.apply(this, args).then(response => {
+            const end = performance.now();
+            const duration = Math.round(end - start);
+            
+            if (args[0] && args[0].includes('fitfriendsclub-api')) {
+                console.log(`⚡ API Call took ${duration}ms: ${args[0]}`);
+            }
+            
+            return response;
+        });
+    };
+}
+
+// Error boundary for global error handling
+function setupErrorBoundary() {
+    window.addEventListener('error', function(event) {
+        console.error('❌ Global Error:', event.error);
+        
+        if (window.FitFriendsConfig.DEBUG_MODE) {
+            showError(`Global Error: ${event.error.message}`);
+        } else {
+            showError('An unexpected error occurred. Please refresh the page.');
+        }
+    });
+    
+    window.addEventListener('unhandledrejection', function(event) {
+        console.error('❌ Unhandled Promise Rejection:', event.reason);
+        
+        if (window.FitFriendsConfig.DEBUG_MODE) {
+            showError(`Promise Error: ${event.reason}`);
+        } else {
+            showError('A network error occurred. Please check your connection.');
+        }
+    });
+}
+
+// Global testing function
+window.testFitFriendsAPI = async function() {
+    try {
+        console.log('🧪 Testing FitFriends API...');
+        showLoading('#testResults');
+        
+        const results = await window.FitFriendsClubs.api.runAllTests();
+        
+        console.log('✅ Test Results:', results);
+        showSuccess('API Test Completed Successfully!');
+        
+        return results;
+    } catch (error) {
+        console.error('❌ Test failed:', error);
+        showError('API Test Failed');
+        return { status: 'error', message: error.message };
+    } finally {
+        hideLoading('#testResults');
+    }
+};
+
+// Initialize end-section features when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    setupKeyboardShortcuts();
+    setupAutoRefresh();
+    setupPerformanceMonitoring();
+    setupErrorBoundary();
+    
+    console.log('✅ FitFriendsClubs End Section Loaded');
+});
+
+// Final initialization check
+setTimeout(() => {
+    if (window.FitFriendsConfig && window.FitFriendsClubs) {
+        console.log('🎉 FitFriendsClubs Fully Loaded and Ready!');
+        console.log('🔧 Debug Commands Available:');
+        console.log('  - testFitFriendsAPI() - Run API tests');
+        console.log('  - FitFriendsClubs.loadClubs() - Load clubs');
+        console.log('  - FitFriendsClubs.loadTrails() - Load trails');
+        console.log('  - Ctrl/Cmd + T - Quick API test');
+        
+        updateGlobalStatus('ready', 'FitFriendsClubs Ready ✅');
+    } else {
+        console.warn('⚠️ FitFriendsClubs initialization incomplete');
+        updateGlobalStatus('error', 'Initialization Incomplete ⚠️');
+    }
+}, 2000);
+
+</script>
+
+<!-- Hidden Elements for Loading States -->
+<div id="globalLoading" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999;">
+    <div class="fitfriends-loading"></div>
+    <p style="margin-top: 10px; text-align: center;">Loading FitFriendsClubs...</p>
+</div>
+
+<!-- Global Error/Success Messages -->
+<div id="globalMessages" style="position: fixed; top: 20px; right: 20px; z-index: 9998; max-width: 300px;">
+    <div id="errorMessage" style="display: none;" class="fitfriends-error"></div>
+    <div id="successMessage" style="display: none;" class="fitfriends-success"></div>
+</div>
+
+<!-- Debug Panel (only shows in debug mode) -->
+<div id="debugPanel" style="display: none; position: fixed; bottom: 20px; left: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 5px; font-family: monospace; font-size: 12px; z-index: 9997;">
+    <div>FitFriendsClubs Debug Panel</div>
+    <div>API: <span id="debugApiStatus">Checking...</span></div>
+    <div>Last Update: <span id="debugLastUpdate">Never</span></div>
+    <button onclick="testFitFriendsAPI()" style="margin-top: 5px; padding: 2px 5px;">Test API</button>
+</div>
+
+<script>
+// Show debug panel in debug mode
+if (window.FitFriendsConfig && window.FitFriendsConfig.DEBUG_MODE) {
+    document.getElementById('debugPanel').style.display = 'block';
+    
+    // Update debug info periodically
+    setInterval(() => {
+        document.getElementById('debugLastUpdate').textContent = new Date().toLocaleTimeString();
+    }, 30000);
+}
+</script>

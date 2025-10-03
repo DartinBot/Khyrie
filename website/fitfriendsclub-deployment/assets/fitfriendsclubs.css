@@ -1,0 +1,324 @@
+/* FitFriendsClubs WordPress Plugin Styles */
+
+/* Loading Animations */
+.ff-loading {
+    text-align: center;
+    padding: 20px;
+}
+
+.ff-load {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #4CAF50;
+    border-radius: 50%;
+    animation: ff-spin 1s linear infinite;
+}
+
+@keyframes ff-spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Status Messages */
+.ff-error {
+    color: #F44336;
+    background: #ffebee;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 4px solid #F44336;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.ff-success {
+    color: #4CAF50;
+    background: #e8f5e8;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 4px solid #4CAF50;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+.ff-warning {
+    color: #FF9800;
+    background: #fff3e0;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 4px solid #FF9800;
+    margin: 10px 0;
+    font-size: 14px;
+}
+
+/* Status Indicators */
+.ff-online {
+    color: #4CAF50 !important;
+    font-weight: bold;
+}
+
+.ff-offline {
+    color: #F44336 !important;
+    font-weight: bold;
+}
+
+.ff-connecting {
+    color: #FF9800 !important;
+    font-weight: bold;
+}
+
+/* Container Styles */
+.fitfriendsclubs-container {
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.fitfriendsclubs-container h3 {
+    color: #333;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #4CAF50;
+}
+
+/* Status Container */
+.ff-status-container {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+    text-align: center;
+}
+
+/* Dashboard Stats */
+.ff-dashboard-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.ff-stat-card {
+    background: #f8f9fa;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #4CAF50;
+    text-align: center;
+}
+
+.ff-stat-card h4 {
+    margin: 0 0 10px 0;
+    color: #333;
+    font-size: 16px;
+}
+
+.ff-stat-card div {
+    font-size: 18px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+/* Card Styles */
+.ff-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ff-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+/* Grids */
+.ff-clubs-grid, .ff-trails-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin-top: 20px;
+}
+
+.ff-club-card, .ff-trail-card {
+    background: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.ff-club-card:hover, .ff-trail-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.ff-club-card h4, .ff-trail-card h4 {
+    color: #333;
+    margin-bottom: 10px;
+    font-size: 18px;
+}
+
+.ff-club-card p, .ff-trail-card p {
+    margin: 5px 0;
+    color: #666;
+    font-size: 14px;
+}
+
+/* Badges */
+.ff-badge {
+    display: inline-block;
+    background: #2196F3;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+    margin: 2px;
+}
+
+.ff-diff-easy {
+    background: #4CAF50 !important;
+}
+
+.ff-diff-moderate {
+    background: #FF9800 !important;
+}
+
+.ff-diff-hard {
+    background: #F44336 !important;
+}
+
+/* Modal Styles */
+.ff-modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.5);
+}
+
+.ff-modal-content {
+    background-color: #fefefe;
+    margin: 5% auto;
+    padding: 20px;
+    border: none;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.ff-close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.ff-close:hover,
+.ff-close:focus {
+    color: #000;
+    text-decoration: none;
+}
+
+/* Test Results */
+.ff-test-results {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+    font-family: monospace;
+    font-size: 14px;
+    border-left: 4px solid #2196F3;
+}
+
+.ff-results {
+    margin: 15px 0;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .fitfriendsclubs-container {
+        margin: 10px;
+        padding: 15px;
+    }
+    
+    .ff-clubs-grid, .ff-trails-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .ff-dashboard-stats {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .ff-modal-content {
+        width: 95%;
+        margin: 10% auto;
+        padding: 15px;
+    }
+}
+
+/* Buttons */
+.ff-button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+
+.ff-button:hover {
+    background: #45a049;
+}
+
+.ff-button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+/* Admin Page Styles */
+.ff-admin-section {
+    background: #fff;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+
+.ff-shortcode-list {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+}
+
+.ff-shortcode-list code {
+    background: #e9ecef;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-family: monospace;
+}

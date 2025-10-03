@@ -1,0 +1,654 @@
+<!-- FitFriendsClubs Complete Single-File Integration -->
+<!-- Place this ENTIRE file in: Settings > Custom Code > Add to BODY - end -->
+<!-- This includes HEAD styles, BODY logic, and END utilities all in one -->
+
+<style type="text/css">
+/* FitFriendsClubs Loading Styles */
+.fitfriends-loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #4CAF50;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.fitfriends-error {
+    color: #F44336;
+    background: #ffebee;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 4px solid #F44336;
+    margin: 10px 0;
+}
+
+.fitfriends-success {
+    color: #4CAF50;
+    background: #e8f5e8;
+    padding: 8px 12px;
+    border-radius: 4px;
+    border-left: 4px solid #4CAF50;
+    margin: 10px 0;
+}
+
+.fitfriends-status-online {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+.fitfriends-status-offline {
+    color: #F44336;
+    font-weight: bold;
+}
+
+/* Club and Trail Cards */
+.fitfriends-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    padding: 16px;
+    margin: 8px 0;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: white;
+}
+
+.fitfriends-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transform: translateY(-2px);
+}
+
+.fitfriends-badge {
+    display: inline-block;
+    background: #2196F3;
+    color: white;
+    padding: 4px 8px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.fitfriends-difficulty-easy { background: #4CAF50; }
+.fitfriends-difficulty-moderate { background: #FF9800; }
+.fitfriends-difficulty-hard { background: #F44336; }
+</style>
+
+<script type="text/javascript">
+(function() {
+    'use strict';
+    
+    console.log('🏋️ FitFriendsClubs Single-File Integration Loading...');
+    
+    // Configuration Setup
+    try {
+        window.FitFriendsConfig = {
+            API_URL: 'https://fitfriendsclub-api.darnellroy2.workers.dev',
+            DEBUG_MODE: true,
+            AUTO_LOAD: true,
+            RETRY_ATTEMPTS: 3,
+            TIMEOUT: 10000,
+            
+            FEATURES: {
+                CLUBS: true,
+                TRAILS: true,
+                DASHBOARD: true,
+                LIGHTBOXES: true,
+                AUTO_REFRESH: false
+            }
+        };
+        
+        console.log('✅ Configuration loaded:', window.FitFriendsConfig.API_URL);
+        
+    } catch (error) {
+        console.error('❌ Config error:', error);
+        window.FitFriendsConfig = {
+            API_URL: 'https://fitfriendsclub-api.darnellroy2.workers.dev',
+            DEBUG_MODE: true
+        };
+    }
+
+    // Utility Functions
+    window.showGlobalLoading = function() {
+        const elements = ['#loadingIcon', '#globalLoading'];
+        elements.forEach(selector => {
+            try {
+                if ($w(selector)) $w(selector).show();
+            } catch(e) {}
+        });
+    };
+
+    window.hideGlobalLoading = function() {
+        const elements = ['#loadingIcon', '#globalLoading'];
+        elements.forEach(selector => {
+            try {
+                if ($w(selector)) $w(selector).hide();
+            } catch(e) {}
+        });
+    };
+
+    window.showLoading = function(containerSelector) {
+        try {
+            if ($w('#loadingIcon')) $w('#loadingIcon').show();
+            if ($w(containerSelector)) $w(containerSelector).addClass('loading');
+        } catch(e) {}
+    };
+
+    window.hideLoading = function(containerSelector) {
+        try {
+            if ($w('#loadingIcon')) $w('#loadingIcon').hide();
+            if ($w(containerSelector)) $w(containerSelector).removeClass('loading');
+        } catch(e) {}
+    };
+
+    window.showError = function(message) {
+        console.error('❌ Error:', message);
+        try {
+            if ($w('#errorMessage')) {
+                $w('#errorMessage').text = message;
+                $w('#errorMessage').show();
+                setTimeout(() => {
+                    if ($w('#errorMessage')) $w('#errorMessage').hide();
+                }, 5000);
+            }
+        } catch(e) {}
+    };
+
+    window.showSuccess = function(message) {
+        console.log('✅ Success:', message);
+        try {
+            if ($w('#successMessage')) {
+                $w('#successMessage').text = message;
+                $w('#successMessage').show();
+                setTimeout(() => {
+                    if ($w('#successMessage')) $w('#successMessage').hide();
+                }, 3000);
+            }
+        } catch(e) {}
+    };
+
+    window.updateGlobalStatus = function(status, message) {
+        const statusElements = ['#statusIndicator', '#globalStatus', '#apiStatus'];
+        statusElements.forEach(selector => {
+            try {
+                if ($w(selector)) {
+                    $w(selector).text = message;
+                    $w(selector).style.color = status === 'online' ? '#4CAF50' : '#F44336';
+                }
+            } catch(e) {}
+        });
+    };
+
+    window.updateClubCount = function(count) {
+        const countElements = ['#clubCountDisplay', '#clubsCount', '#totalClubs'];
+        countElements.forEach(selector => {
+            try {
+                if ($w(selector)) $w(selector).text = count + ' Clubs Available';
+            } catch(e) {}
+        });
+    };
+
+    window.updateTrailCount = function(count) {
+        const countElements = ['#trailCountDisplay', '#trailsCount', '#totalTrails'];
+        countElements.forEach(selector => {
+            try {
+                if ($w(selector)) $w(selector).text = count + ' Trails Available';
+            } catch(e) {}
+        });
+    };
+
+    // Lightbox Functions
+    window.showClubDetails = function(clubData) {
+        try {
+            if (!window.FitFriendsConfig.FEATURES.LIGHTBOXES) return;
+            
+            if ($w('#clubDetailsLightbox')) {
+                if ($w('#clubDetailsTitle')) $w('#clubDetailsTitle').text = clubData.clubName || 'Unknown Club';
+                if ($w('#clubDetailsCategory')) $w('#clubDetailsCategory').text = 'Category: ' + (clubData.clubCategory || 'General');
+                if ($w('#clubDetailsEquipment')) $w('#clubDetailsEquipment').text = 'Equipment: ' + (clubData.equipmentType || 'Mixed');
+                if ($w('#clubDetailsDescription')) $w('#clubDetailsDescription').text = clubData.description || 'Premium fitness club';
+                
+                $w('#clubDetailsLightbox').show();
+                
+                if ($w('#closeClubDetails')) {
+                    $w('#closeClubDetails').onClick(() => $w('#clubDetailsLightbox').hide());
+                }
+            }
+        } catch(e) {
+            console.warn('Club details error:', e);
+        }
+    };
+
+    window.showTrailDetails = function(trailData) {
+        try {
+            if (!window.FitFriendsConfig.FEATURES.LIGHTBOXES) return;
+            
+            if ($w('#trailDetailsLightbox')) {
+                if ($w('#trailDetailsTitle')) $w('#trailDetailsTitle').text = trailData.trailName || 'Unknown Trail';
+                if ($w('#trailDetailsLocation')) $w('#trailDetailsLocation').text = 'Location: ' + (trailData.location || 'Unknown');
+                if ($w('#trailDetailsDifficulty')) $w('#trailDetailsDifficulty').text = 'Difficulty: ' + (trailData.difficulty || 'Moderate');
+                if ($w('#trailDetailsDistance')) $w('#trailDetailsDistance').text = 'Distance: ' + (trailData.distance || 'TBD');
+                if ($w('#trailDetailsDescription')) $w('#trailDetailsDescription').text = trailData.description || 'Scenic virtual trail';
+                
+                $w('#trailDetailsLightbox').show();
+                
+                if ($w('#closeTrailDetails')) {
+                    $w('#closeTrailDetails').onClick(() => $w('#trailDetailsLightbox').hide());
+                }
+            }
+        } catch(e) {
+            console.warn('Trail details error:', e);
+        }
+    };
+
+    // API Class
+    class FitFriendsAPI {
+        constructor() {
+            this.baseUrl = window.FitFriendsConfig.API_URL;
+            this.timeout = window.FitFriendsConfig.TIMEOUT || 10000;
+        }
+
+        async apiCall(endpoint, options = {}) {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+            
+            try {
+                if (window.FitFriendsConfig.DEBUG_MODE) {
+                    console.log(`🔗 API Call: ${this.baseUrl}${endpoint}`);
+                }
+                
+                const response = await fetch(`${this.baseUrl}${endpoint}`, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        ...options.headers
+                    },
+                    signal: controller.signal,
+                    ...options
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`API call failed: ${response.status} ${response.statusText}`);
+                }
+
+                return await response.json();
+            } catch (error) {
+                clearTimeout(timeoutId);
+                console.error('❌ API Error:', error);
+                throw error;
+            }
+        }
+
+        async healthCheck() { return await this.apiCall('/'); }
+        async getFitnessClubs() { return await this.apiCall('/test/clubs'); }
+        async getVirtualTrails() { return await this.apiCall('/test/trails'); }
+        async runAllTests() { return await this.apiCall('/test/all'); }
+    }
+
+    // Initialize API
+    let fitFriendsAPI;
+
+    // Core Functions
+    async function initializeFitFriendsClubs() {
+        try {
+            console.log('🚀 Initializing FitFriendsClubs...');
+            
+            if (!fitFriendsAPI) fitFriendsAPI = new FitFriendsAPI();
+            
+            showGlobalLoading();
+            
+            const healthCheck = await fitFriendsAPI.healthCheck();
+            console.log('✅ API Health Check:', healthCheck);
+            
+            if (healthCheck.status === 'success') {
+                updateGlobalStatus('online', 'API Connected ✅');
+            }
+            
+            hideGlobalLoading();
+            return true;
+        } catch (error) {
+            console.error('❌ Initialization failed:', error);
+            updateGlobalStatus('offline', 'API Connection Failed ❌');
+            hideGlobalLoading();
+            return false;
+        }
+    }
+
+    function setupFitFriendsNavigation() {
+        try {
+            const navButtons = {
+                '#homeButton': '/',
+                '#clubsButton': '/clubs',
+                '#trailsButton': '/trails',
+                '#dashboardButton': '/dashboard'
+            };
+            
+            Object.entries(navButtons).forEach(([selector, path]) => {
+                try {
+                    if ($w(selector)) {
+                        $w(selector).onClick(() => wixLocation.to(path));
+                    }
+                } catch(e) {}
+            });
+            
+            if ($w('#testApiButton')) {
+                $w('#testApiButton').onClick(runAPITest);
+            }
+        } catch (error) {
+            console.error('❌ Navigation setup failed:', error);
+        }
+    }
+
+    async function runAPITest() {
+        try {
+            showLoading('#testResults');
+            const results = await fitFriendsAPI.runAllTests();
+            
+            if ($w('#testResults')) {
+                $w('#testResults').text = `✅ ${results.message}`;
+                $w('#testResults').style.color = '#4CAF50';
+            }
+            
+            console.log('🧪 API Test Results:', results);
+        } catch (error) {
+            if ($w('#testResults')) {
+                $w('#testResults').text = `❌ Test Failed: ${error.message}`;
+                $w('#testResults').style.color = '#F44336';
+            }
+            console.error('❌ API Test failed:', error);
+        } finally {
+            hideLoading('#testResults');
+        }
+    }
+
+    async function loadFitnessClubs() {
+        if (!window.FitFriendsConfig.FEATURES.CLUBS) return;
+        
+        try {
+            console.log('🏃‍♀️ Loading fitness clubs...');
+            showLoading('#clubsContainer');
+            
+            const response = await fitFriendsAPI.getFitnessClubs();
+            
+            if (response.status === 'success' && response.data?.clubs) {
+                displayFitnessClubs(response.data.clubs);
+                updateClubCount(response.data.clubs.length);
+            } else {
+                showError('Failed to load fitness clubs');
+            }
+        } catch (error) {
+            console.error('❌ Failed to load clubs:', error);
+            showError('Error loading fitness clubs');
+        } finally {
+            hideLoading('#clubsContainer');
+        }
+    }
+
+    async function loadVirtualTrails() {
+        if (!window.FitFriendsConfig.FEATURES.TRAILS) return;
+        
+        try {
+            console.log('🗺️ Loading virtual trails...');
+            showLoading('#trailsContainer');
+            
+            const response = await fitFriendsAPI.getVirtualTrails();
+            
+            if (response.status === 'success' && response.data?.trails) {
+                displayVirtualTrails(response.data.trails);
+                updateTrailCount(response.data.trails.length);
+            } else {
+                showError('Failed to load virtual trails');
+            }
+        } catch (error) {
+            console.error('❌ Failed to load trails:', error);
+            showError('Error loading virtual trails');
+        } finally {
+            hideLoading('#trailsContainer');
+        }
+    }
+
+    function displayFitnessClubs(clubs) {
+        try {
+            if (!$w('#clubsRepeater')) return;
+            
+            const clubData = clubs.map((club, index) => ({
+                _id: club.id || `club-${index}`,
+                clubName: club.name || 'Unknown Club',
+                clubCategory: club.category || 'General',
+                equipmentType: club.equipment_type || 'Mixed Equipment',
+                description: club.description || 'Premium fitness club'
+            }));
+            
+            $w('#clubsRepeater').data = clubData;
+            
+            $w('#clubsRepeater').onItemReady(($item, itemData) => {
+                try {
+                    if ($item('#clubNameText')) $item('#clubNameText').text = itemData.clubName;
+                    if ($item('#clubCategoryText')) $item('#clubCategoryText').text = itemData.clubCategory;
+                    if ($item('#equipmentTypeText')) $item('#equipmentTypeText').text = `Equipment: ${itemData.equipmentType}`;
+                    
+                    if ($item('#clubContainer')) {
+                        $item('#clubContainer').onClick(() => showClubDetails(itemData));
+                    }
+                } catch(e) {}
+            });
+            
+            console.log(`✅ Displayed ${clubs.length} fitness clubs`);
+        } catch (error) {
+            console.error('❌ Display clubs failed:', error);
+        }
+    }
+
+    function displayVirtualTrails(trails) {
+        try {
+            if (!$w('#trailsRepeater')) return;
+            
+            const trailData = trails.map((trail, index) => ({
+                _id: trail.id || `trail-${index}`,
+                trailName: trail.name || 'Unknown Trail',
+                location: trail.location || 'Unknown Location',
+                difficulty: trail.difficulty || 'Moderate',
+                distance: trail.distance_km ? `${trail.distance_km}km` : 'Distance TBD',
+                description: trail.description || 'Scenic virtual trail'
+            }));
+            
+            $w('#trailsRepeater').data = trailData;
+            
+            $w('#trailsRepeater').onItemReady(($item, itemData) => {
+                try {
+                    if ($item('#trailNameText')) $item('#trailNameText').text = itemData.trailName;
+                    if ($item('#locationText')) $item('#locationText').text = itemData.location;
+                    if ($item('#difficultyText')) $item('#difficultyText').text = `Difficulty: ${itemData.difficulty}`;
+                    if ($item('#distanceText')) $item('#distanceText').text = itemData.distance;
+                    
+                    if ($item('#trailContainer')) {
+                        $item('#trailContainer').onClick(() => showTrailDetails(itemData));
+                    }
+                } catch(e) {}
+            });
+            
+            console.log(`✅ Displayed ${trails.length} virtual trails`);
+        } catch (error) {
+            console.error('❌ Display trails failed:', error);
+        }
+    }
+
+    function loadPageData() {
+        try {
+            const currentPage = wixLocation.path;
+            
+            if (currentPage === '/clubs') loadFitnessClubs();
+            else if (currentPage === '/trails') loadVirtualTrails();
+            else if (currentPage === '/dashboard') loadDashboardData();
+            else if (currentPage === '/' || currentPage === '') loadHomepageStats();
+            
+        } catch (error) {
+            console.error('❌ Load page data failed:', error);
+        }
+    }
+
+    async function loadHomepageStats() {
+        try {
+            const testResults = await fitFriendsAPI.runAllTests();
+            
+            if (testResults.status === 'success') {
+                const clubsTest = testResults.results.find(test => test.name === 'Fitness Clubs');
+                const trailsTest = testResults.results.find(test => test.name === 'Virtual Trails');
+                
+                if ($w('#clubCountText') && clubsTest?.dataCount !== undefined) {
+                    $w('#clubCountText').text = `${clubsTest.dataCount} Premium Clubs`;
+                }
+                
+                if ($w('#trailCountText') && trailsTest?.dataCount !== undefined) {
+                    $w('#trailCountText').text = `${trailsTest.dataCount} Virtual Trails`;
+                }
+                
+                if ($w('#platformStatusText')) {
+                    const allWorking = testResults.results.every(test => test.status === 'success');
+                    $w('#platformStatusText').text = allWorking ? 'All Systems Operational' : 'System Issues Detected';
+                }
+            }
+        } catch (error) {
+            console.error('❌ Failed to load homepage stats:', error);
+        }
+    }
+
+    async function loadDashboardData() {
+        if (!window.FitFriendsConfig.FEATURES.DASHBOARD) return;
+        
+        try {
+            console.log('📊 Loading dashboard...');
+            showLoading('#dashboardContainer');
+            
+            const testResults = await fitFriendsAPI.runAllTests();
+            
+            if ($w('#dashboardRepeater')) {
+                const dashboardItems = testResults.results.map((test, index) => ({
+                    _id: `test-${index}`,
+                    testName: test.name,
+                    status: test.status,
+                    message: test.message,
+                    responseTime: test.responseTime || 'N/A',
+                    dataCount: test.dataCount || 0
+                }));
+                
+                $w('#dashboardRepeater').data = dashboardItems;
+                
+                $w('#dashboardRepeater').onItemReady(($item, itemData) => {
+                    try {
+                        if ($item('#testNameText')) $item('#testNameText').text = itemData.testName;
+                        if ($item('#statusText')) {
+                            $item('#statusText').text = itemData.status.toUpperCase();
+                            const colors = { 'success': '#4CAF50', 'error': '#F44336', 'warning': '#FF9800' };
+                            $item('#statusText').style.color = colors[itemData.status] || '#757575';
+                        }
+                        if ($item('#messageText')) $item('#messageText').text = itemData.message;
+                    } catch(e) {}
+                });
+            }
+        } catch (error) {
+            console.error('❌ Failed to load dashboard:', error);
+            showError('Failed to load dashboard data');
+        } finally {
+            hideLoading('#dashboardContainer');
+        }
+    }
+
+    // Global Testing Function
+    window.testFitFriendsAPI = async function() {
+        try {
+            console.log('🧪 Testing FitFriends API...');
+            const results = await fitFriendsAPI.runAllTests();
+            console.log('✅ Test Results:', results);
+            showSuccess('API Test Completed Successfully!');
+            return results;
+        } catch (error) {
+            console.error('❌ Test failed:', error);
+            showError('API Test Failed: ' + error.message);
+            return { status: 'error', message: error.message };
+        }
+    };
+
+    // Keyboard Shortcuts
+    function setupKeyboardShortcuts() {
+        document.addEventListener('keydown', function(event) {
+            try {
+                if (event.key === 'Escape') {
+                    if ($w('#clubDetailsLightbox')) $w('#clubDetailsLightbox').hide();
+                    if ($w('#trailDetailsLightbox')) $w('#trailDetailsLightbox').hide();
+                }
+                
+                if ((event.ctrlKey || event.metaKey) && event.key === 't' && window.FitFriendsConfig.DEBUG_MODE) {
+                    event.preventDefault();
+                    testFitFriendsAPI();
+                }
+            } catch(e) {}
+        });
+    }
+
+    // Main Integration
+    function initializeWixIntegration() {
+        $w.onReady(async function () {
+            try {
+                console.log('✅ FitFriendsClubs Wix page loaded!');
+                
+                const initialized = await initializeFitFriendsClubs();
+                
+                if (initialized) {
+                    setupFitFriendsNavigation();
+                    
+                    if (window.FitFriendsConfig.AUTO_LOAD) {
+                        loadPageData();
+                    }
+                }
+                
+                setupKeyboardShortcuts();
+                
+                // Export for testing
+                if (window.FitFriendsConfig.DEBUG_MODE) {
+                    window.FitFriendsClubs = {
+                        api: fitFriendsAPI,
+                        loadClubs: loadFitnessClubs,
+                        loadTrails: loadVirtualTrails,
+                        loadDashboard: loadDashboardData,
+                        test: runAPITest
+                    };
+                }
+                
+            } catch (error) {
+                console.error('❌ FitFriendsClubs initialization error:', error);
+                updateGlobalStatus('error', 'Initialization Failed');
+            }
+        });
+    }
+
+    // Initialize
+    if (typeof $w !== 'undefined') {
+        initializeWixIntegration();
+    } else {
+        window.addEventListener('load', () => {
+            setTimeout(initializeWixIntegration, 1000);
+        });
+    }
+
+    console.log('✅ FitFriendsClubs Single-File Integration Ready!');
+
+})();
+</script>
+
+<!-- Hidden Elements -->
+<div id="globalLoading" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: rgba(255,255,255,0.9); padding: 20px; border-radius: 8px; text-align: center;">
+    <div class="fitfriends-loading"></div>
+    <p style="margin-top: 10px; color: #333;">Loading FitFriendsClubs...</p>
+</div>
+
+<div id="globalMessages" style="position: fixed; top: 20px; right: 20px; z-index: 9998; max-width: 300px;">
+    <div id="errorMessage" style="display: none;" class="fitfriends-error"></div>
+    <div id="successMessage" style="display: none;" class="fitfriends-success"></div>
+</div>
